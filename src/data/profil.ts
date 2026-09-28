@@ -4,6 +4,7 @@ export const profil = {
   nama: "Ikhsan Nur Fadlie",
   namaPendek: "Ikhsan",
   inisial: "INF",
+  situs: "https://ikhsannurfadlie.vercel.app",
   peran: ["Data Analyst", "AI Engineer", "Data Scientist", "GraphRAG & LLM Builder"],
   tagline:
     "Mengubah data mentah menjadi keputusan, mulai dari dashboard monitoring instansi hingga sistem rekomendasi berbasis GraphRAG dan Large Language Model.",
@@ -177,7 +178,7 @@ export const proyek: Proyek[] = [
     demo: [
       {
         judul: "Demo: Dashboard Kinerja LSPro",
-        href: "/demo/lspro-kinerja/index.html",
+        href: "/demo/lspro-kinerja/dashboard.html",
         deskripsi: "Pilih menu di sidebar untuk berpindah halaman. Buka layar penuh untuk melihat peta sebaran.",
       },
     ],
@@ -230,12 +231,12 @@ export const proyek: Proyek[] = [
     demo: [
       {
         judul: "Demo LPH: Jadwal Auditor Halal",
-        href: "/demo/lph/index.html",
+        href: "/demo/lph/dashboard.html",
         deskripsi: "Rekomendasi giliran, matriks ruang lingkup, sertifikat habis, dan aturan unit kerja.",
       },
       {
         judul: "Demo LSPro: Jadwal per Jenis Dinas",
-        href: "/demo/lspro/index.html",
+        href: "/demo/lspro/dashboard.html",
         deskripsi: "5 peran tim audit, matriks personil × komoditi, dan 3 grafik analisis.",
       },
     ],

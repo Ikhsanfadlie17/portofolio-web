@@ -11,6 +11,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 const display = Space_Grotesk({ variable: "--font-display", subsets: ["latin"], weight: ["500", "600", "700"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(profil.situs),
   title: {
     default: `${profil.nama} · Data Analyst & AI Engineer`,
     template: `%s · ${profil.nama}`,
