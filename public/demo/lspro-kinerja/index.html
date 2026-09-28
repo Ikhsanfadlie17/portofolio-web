@@ -1,0 +1,2681 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo · Dashboard Kinerja LSPro</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+:root{
+  --bg:#0b1020;
+  --bg-soft:#111833;
+  --surface:#151d3b;
+  --surface-2:#1b2547;
+  --line:rgba(148,163,184,.16);
+  --line-soft:rgba(148,163,184,.09);
+  --txt:#e8edf9;
+  --txt-dim:#94a3b8;
+  --txt-mute:#64748b;
+  --blue:#3b82f6;
+  --cyan:#22d3ee;
+  --green:#22c55e;
+  --amber:#f59e0b;
+  --red:#ef4444;
+  --violet:#a855f7;
+  --teal:#14b8a6;
+  --radius:16px;
+  --sidebar-w:264px;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+
+:root[data-theme="light"]{
+  --bg:#f4f6fb;
+  --bg-soft:#eaeef7;
+  --surface:#ffffff;
+  --surface-2:#f1f4fb;
+  --line:rgba(15,23,42,.10);
+  --line-soft:rgba(15,23,42,.06);
+  --txt:#0f172a;
+  --txt-dim:#475569;
+  --txt-mute:#94a3b8;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--txt);
+  font-size:14px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  transition:background .25s ease,color .25s ease;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(900px 500px at 12% -5%, rgba(59,130,246,.18), transparent 60%),
+    radial-gradient(800px 480px at 95% 8%, rgba(168,85,247,.14), transparent 62%),
+    radial-gradient(700px 500px at 50% 100%, rgba(20,184,166,.10), transparent 60%);
+  transition:opacity .25s ease;
+}
+:root[data-theme="light"] body::before{opacity:.5}
+
+.app{display:flex;min-height:100vh;position:relative;z-index:1}
+
+/* ---------- SIDEBAR ---------- */
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;
+  background:var(--surface);
+  backdrop-filter:blur(18px);
+  border-right:1px solid var(--line);
+  display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;
+  transition:transform .28s ease,background .25s ease;
+}
+.brand{display:flex;align-items:center;gap:12px;padding:22px 20px 18px;border-bottom:1px solid var(--line-soft)}
+.brand-mark{
+  width:40px;height:40px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--blue),var(--violet));
+  display:grid;place-items:center;font-weight:800;font-size:15px;letter-spacing:.5px;
+  box-shadow:0 6px 18px rgba(59,130,246,.35);
+}
+.brand-text{display:flex;flex-direction:column;line-height:1.25}
+.brand-text strong{font-size:16px;letter-spacing:.3px}
+.brand-text span{font-size:11px;color:var(--txt-mute);text-transform:uppercase;letter-spacing:1px}
+
+.nav{padding:14px 12px;display:flex;flex-direction:column;gap:4px;flex:1;overflow-y:auto}
+.nav-item{
+  display:flex;align-items:center;gap:11px;width:100%;
+  padding:11px 13px;border:0;border-radius:11px;cursor:pointer;
+  background:transparent;color:var(--txt-dim);
+  font-family:var(--font);font-size:13.5px;font-weight:500;text-align:left;
+  transition:all .18s ease;position:relative;
+}
+.nav-item:hover{background:rgba(148,163,184,.08);color:var(--txt)}
+.nav-item.active{
+  background:linear-gradient(90deg,rgba(59,130,246,.22),rgba(59,130,246,.05));
+  color:#fff;font-weight:600;
+}
+.nav-item.active::before{
+  content:'';position:absolute;left:0;top:22%;height:56%;width:3px;
+  border-radius:0 4px 4px 0;background:linear-gradient(180deg,var(--cyan),var(--blue));
+}
+.nav-ico{font-size:14px;opacity:.9;width:16px;text-align:center}
+
+.sidebar-foot{padding:14px;border-top:1px solid var(--line-soft)}
+.sync{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(34,197,94,.16);flex-shrink:0}
+.dot.loading{background:var(--amber);box-shadow:0 0 0 4px rgba(245,158,11,.16);animation:pulse 1.1s infinite}
+.dot.error{background:var(--red);box-shadow:0 0 0 4px rgba(239,68,68,.16)}
+@keyframes pulse{50%{opacity:.35}}
+.sync-label{font-size:11px;color:var(--txt-mute);text-transform:uppercase;letter-spacing:.7px}
+.sync-time{font-size:12px;color:var(--txt-dim);font-variant-numeric:tabular-nums}
+.btn-refresh{
+  width:100%;padding:9px;border-radius:10px;cursor:pointer;
+  border:1px solid var(--line);background:rgba(148,163,184,.07);
+  color:var(--txt-dim);font-family:var(--font);font-size:12.5px;font-weight:600;
+  transition:all .18s ease;
+}
+.btn-refresh:hover{background:rgba(59,130,246,.16);color:#fff;border-color:rgba(59,130,246,.4)}
+
+/* ---------- MAIN ---------- */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  display:flex;align-items:center;gap:16px;
+  padding:20px 28px;border-bottom:1px solid var(--line-soft);
+  background:var(--bg);backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:20;
+  transition:background .25s ease;
+}
+.theme-toggle{
+  display:flex;align-items:center;gap:6px;flex-shrink:0;
+  padding:4px;border-radius:99px;border:1px solid var(--line);
+  background:rgba(148,163,184,.08);
+}
+.theme-btn{
+  width:32px;height:32px;border-radius:99px;border:0;cursor:pointer;
+  display:grid;place-items:center;font-size:15px;color:var(--txt-mute);
+  background:transparent;transition:all .18s ease;
+}
+.theme-btn.active{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.35)}
+.hamburger{
+  display:none;width:38px;height:38px;border-radius:10px;cursor:pointer;
+  border:1px solid var(--line);background:rgba(148,163,184,.07);color:var(--txt);font-size:18px;
+}
+.topbar-title{flex:1;min-width:0}
+.topbar-title h1{font-size:19px;font-weight:700;letter-spacing:-.2px}
+.topbar-title p{font-size:12.5px;color:var(--txt-mute);margin-top:2px}
+.topbar-filter{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.topbar-filter label{font-size:12px;color:var(--txt-mute);text-transform:uppercase;letter-spacing:.6px}
+
+select,input[type=search]{
+  padding:8px 12px;border-radius:9px;
+  border:1px solid var(--line);background:var(--surface);
+  color:var(--txt);font-family:var(--font);font-size:13px;outline:none;
+  transition:border-color .16s ease;
+}
+select:focus,input[type=search]:focus{border-color:rgba(59,130,246,.55)}
+select option{background:var(--surface);color:var(--txt)}
+input[type=search]::placeholder{color:var(--txt-mute)}
+
+/* ---------- LOADER / ERROR ---------- */
+.loader{padding:80px 20px;text-align:center;color:var(--txt-dim)}
+.spinner{
+  width:38px;height:38px;margin:0 auto 16px;border-radius:50%;
+  border:3px solid rgba(148,163,184,.18);border-top-color:var(--blue);
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-box{
+  margin:28px;padding:18px 20px;border-radius:12px;
+  background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fecaca;font-size:13.5px;
+}
+
+/* ---------- CONTENT / PAGES ---------- */
+.content{padding:24px 28px 44px;flex:1}
+.page{display:none;animation:fade .3s ease}
+.page.active{display:flex;flex-direction:column;gap:20px}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---------- KPI ---------- */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.kpi-grid-3{grid-template-columns:repeat(3,1fr)}
+.kpi{
+  position:relative;overflow:hidden;
+  padding:18px 20px;border-radius:var(--radius);
+  background:linear-gradient(145deg,var(--surface),var(--bg-soft));
+  border:1px solid var(--line);
+  transition:transform .2s ease,box-shadow .2s ease,background .25s ease;
+}
+.kpi:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(0,0,0,.34)}
+:root[data-theme="light"] .kpi:hover{box-shadow:0 14px 30px rgba(15,23,42,.1)}
+.kpi::after{content:'';position:absolute;left:0;top:0;width:100%;height:3px}
+.kpi-blue::after{background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.kpi-green::after{background:linear-gradient(90deg,var(--green),#4ade80)}
+.kpi-amber::after{background:linear-gradient(90deg,var(--amber),#fbbf24)}
+.kpi-red::after{background:linear-gradient(90deg,var(--red),#f87171)}
+.kpi-violet::after{background:linear-gradient(90deg,var(--violet),#c084fc)}
+.kpi-teal::after{background:linear-gradient(90deg,var(--teal),#2dd4bf)}
+.kpi-label{font-size:11.5px;color:var(--txt-mute);text-transform:uppercase;letter-spacing:.9px;font-weight:600}
+.kpi-value{font-size:32px;font-weight:800;letter-spacing:-1px;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.kpi-foot{font-size:12px;color:var(--txt-dim)}
+
+/* ---------- CARD ---------- */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.card{
+  padding:20px;border-radius:var(--radius);
+  background:linear-gradient(160deg,var(--surface),var(--bg-soft));
+  border:1px solid var(--line);
+  box-shadow:0 8px 28px rgba(0,0,0,.2);
+  transition:background .25s ease,border-color .25s ease;
+}
+:root[data-theme="light"] .card{box-shadow:0 6px 20px rgba(15,23,42,.07)}
+.card-alert{border-color:rgba(239,68,68,.25);background:linear-gradient(160deg,rgba(239,68,68,.08),var(--bg-soft))}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.card-head h3{font-size:14.5px;font-weight:650;letter-spacing:-.1px}
+.card-tag{
+  font-size:10.5px;padding:4px 10px;border-radius:99px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.7px;
+  background:rgba(59,130,246,.14);color:#93c5fd;border:1px solid rgba(59,130,246,.22);
+}
+.tag-red{background:rgba(239,68,68,.14);color:#fca5a5;border-color:rgba(239,68,68,.25)}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.filters input[type=search]{min-width:230px}
+
+.chart-wrap{position:relative;height:260px}
+.chart-tall{height:330px}
+
+/* ---------- FUNNEL ---------- */
+.funnel{display:flex;flex-direction:column;gap:9px}
+.funnel-row{display:grid;grid-template-columns:190px 1fr 58px;align-items:center;gap:14px}
+.funnel-label{font-size:12.5px;color:var(--txt-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.funnel-bar{height:26px;border-radius:7px;background:rgba(148,163,184,.08);overflow:hidden}
+.funnel-fill{
+  height:100%;border-radius:7px;
+  background:linear-gradient(90deg,var(--blue),var(--cyan));
+  transition:width .7s cubic-bezier(.4,0,.2,1);
+}
+.funnel-val{font-size:13px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---------- TABLE ---------- */
+.table-scroll{overflow-x:auto;border-radius:11px;border:1px solid var(--line-soft)}
+.tbl{width:100%;border-collapse:collapse;font-size:12.8px;white-space:nowrap}
+.tbl thead th{
+  padding:11px 14px;text-align:left;font-weight:650;font-size:11px;
+  text-transform:uppercase;letter-spacing:.7px;color:var(--txt-mute);
+  background:rgba(148,163,184,.055);border-bottom:1px solid var(--line);
+  position:sticky;top:0;
+}
+.tbl tbody td{padding:11px 14px;border-bottom:1px solid var(--line-soft);color:var(--txt-dim)}
+.tbl tbody tr:last-child td{border-bottom:0}
+.tbl tbody td:nth-child(2){color:var(--txt);font-weight:550;white-space:normal;min-width:190px}
+.tbl-hover tbody tr{cursor:pointer;transition:background .14s ease}
+.tbl-hover tbody tr:hover{background:rgba(59,130,246,.09)}
+.tbl-empty{text-align:center;padding:30px!important;color:var(--txt-mute)}
+.tbl-foot{margin-top:11px;font-size:12px;color:var(--txt-mute)}
+
+.badge{
+  display:inline-block;padding:3px 9px;border-radius:99px;
+  font-size:11px;font-weight:600;letter-spacing:.2px;
+}
+.b-green{background:rgba(34,197,94,.14);color:#86efac}
+.b-amber{background:rgba(245,158,11,.14);color:#fcd34d}
+.b-red{background:rgba(239,68,68,.14);color:#fca5a5}
+.b-blue{background:rgba(59,130,246,.14);color:#93c5fd}
+.b-gray{background:rgba(148,163,184,.12);color:#cbd5e1}
+.b-violet{background:rgba(168,85,247,.14);color:#d8b4fe}
+:root[data-theme="light"] .b-green{background:rgba(22,163,74,.12);color:#15803d}
+:root[data-theme="light"] .b-amber{background:rgba(217,119,6,.12);color:#b45309}
+:root[data-theme="light"] .b-red{background:rgba(220,38,38,.1);color:#b91c1c}
+:root[data-theme="light"] .b-blue{background:rgba(37,99,235,.1);color:#1d4ed8}
+:root[data-theme="light"] .b-gray{background:rgba(100,116,139,.12);color:#475569}
+:root[data-theme="light"] .b-violet{background:rgba(147,51,234,.1);color:#7e22ce}
+:root[data-theme="light"] .card-tag{background:rgba(37,99,235,.1);color:#1d4ed8;border-color:rgba(37,99,235,.18)}
+:root[data-theme="light"] .tag-red{background:rgba(220,38,38,.1);color:#b91c1c;border-color:rgba(220,38,38,.2)}
+:root[data-theme="light"] .btn-mini{color:#1d4ed8}
+:root[data-theme="light"] .nav-item.active{color:#1d4ed8}
+:root[data-theme="light"] .modal-close:hover{color:#b91c1c}
+
+.btn-mini{
+  padding:4px 11px;border-radius:7px;cursor:pointer;
+  border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.12);
+  color:#93c5fd;font-family:var(--font);font-size:11.5px;font-weight:600;
+  transition:all .16s ease;
+}
+.btn-mini:hover{background:rgba(59,130,246,.26);color:#fff}
+
+.prog{width:110px;height:7px;border-radius:99px;background:rgba(148,163,184,.14);overflow:hidden}
+.prog span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--cyan),var(--blue))}
+
+/* ---------- TIMELINE ---------- */
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-item{display:grid;grid-template-columns:108px 22px 1fr;gap:12px;padding:13px 0;align-items:start}
+.tl-date{display:flex;flex-direction:column;align-items:flex-end;gap:6px;font-size:12px;color:var(--cyan);font-weight:650;text-align:right;padding-top:1px;font-variant-numeric:tabular-nums}
+.tl-sisa{font-size:10px;padding:2px 8px;white-space:nowrap}
+.tl-line{position:relative;display:flex;justify-content:center}
+.tl-line::before{content:'';position:absolute;top:16px;bottom:-16px;width:2px;background:var(--line)}
+.tl-item:last-child .tl-line::before{display:none}
+.tl-dot{width:10px;height:10px;border-radius:50%;background:var(--blue);margin-top:5px;box-shadow:0 0 0 4px rgba(59,130,246,.18);z-index:1}
+.tl-body strong{display:block;font-size:13px;color:var(--txt);font-weight:600}
+.tl-body .tl-produk{display:block;margin-bottom:8px;font-size:12px;color:var(--txt-mute)}
+.tl-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-bottom:2px}
+.tl-h{font-size:17px;font-weight:800;letter-spacing:-.3px;line-height:1.1;color:var(--txt)}
+.tl-dt{font-size:11px;font-weight:600;color:var(--txt-mute)}
+.tl-more{padding:8px 0 0;font-size:12px;color:var(--txt-mute)}
+
+/* Reminder: warna mengikuti jarak hari (hijau > 60, oranye 31-60, merah <= 30) */
+.tier-green .tl-h{color:#4ade80}
+.tier-orange .tl-h{color:#fb923c}
+.tier-red .tl-h{color:#f87171}
+.tier-green .tl-dot{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.2)}
+.tier-orange .tl-dot{background:#f97316;box-shadow:0 0 0 4px rgba(249,115,22,.22)}
+.tier-red .tl-dot{background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.25);animation:pulse-red 1.3s ease-in-out infinite}
+@keyframes pulse-red{50%{box-shadow:0 0 0 9px rgba(239,68,68,.05)}}
+.tl-note{margin-top:10px;padding:9px 12px;border-radius:9px;font-size:12px;line-height:1.55;color:var(--txt-dim);border-left:3px solid transparent}
+.tl-note b{color:var(--txt)}
+.note-green{background:rgba(34,197,94,.09);border-left-color:#22c55e}
+.note-orange{background:rgba(249,115,22,.10);border-left-color:#f97316}
+.note-red{background:rgba(239,68,68,.11);border-left-color:#ef4444}
+.tl-note .rm-warn,.rm-alert .rm-warn{color:#f87171}
+
+.rm-legend{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-bottom:12px}
+.rm-chip{
+  display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:99px;
+  font-size:11.5px;font-weight:600;color:var(--txt-dim);
+  border:1px solid var(--line);background:rgba(148,163,184,.06);
+}
+.rm-chip i{width:8px;height:8px;border-radius:50%}
+.rm-chip.tier-green i{background:#22c55e}
+.rm-chip.tier-orange i{background:#f97316}
+.rm-chip.tier-red i{background:#ef4444}
+.rm-chip b{color:var(--txt);font-variant-numeric:tabular-nums}
+.rm-note{margin-left:auto;font-size:11.5px;color:var(--txt-mute)}
+.rm-alert{margin-bottom:14px;padding:11px 14px;border-radius:10px;font-size:13px;line-height:1.55;color:var(--txt-dim);border:1px solid transparent}
+.rm-alert b{color:var(--txt)}
+.rm-alert.tier-red{background:rgba(239,68,68,.11);border-color:rgba(239,68,68,.4)}
+.rm-alert.tier-orange{background:rgba(249,115,22,.10);border-color:rgba(249,115,22,.4)}
+.rm-alert.tier-green{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.3)}
+:root[data-theme="light"] .tier-green .tl-h{color:#15803d}
+:root[data-theme="light"] .tier-orange .tl-h{color:#c2410c}
+:root[data-theme="light"] .tier-red .tl-h{color:#b91c1c}
+:root[data-theme="light"] .tl-note .rm-warn,:root[data-theme="light"] .rm-alert .rm-warn{color:#b91c1c}
+.tl-team{display:flex;flex-wrap:wrap;gap:6px}
+.tl-team-item{
+  font-size:11px;color:var(--txt-dim);
+  background:rgba(148,163,184,.08);border:1px solid var(--line-soft);
+  border-radius:99px;padding:3px 10px;
+}
+.tl-team-empty{color:var(--txt-mute);font-style:italic;background:transparent;border-style:dashed}
+
+/* ---------- MODAL ---------- */
+.modal{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:24px}
+.modal[hidden]{display:none}
+.loader[hidden],.error-box[hidden],.content[hidden]{display:none}
+.modal-backdrop{position:absolute;inset:0;background:rgba(3,7,18,.76);backdrop-filter:blur(4px)}
+.modal-box{
+  position:relative;width:min(760px,100%);max-height:86vh;overflow-y:auto;
+  border-radius:18px;background:linear-gradient(160deg,var(--surface),var(--bg-soft));
+  border:1px solid var(--line);box-shadow:0 30px 70px rgba(0,0,0,.5);
+  animation:pop .22s ease;
+}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:none}}
+.modal-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+  padding:20px 24px;border-bottom:1px solid var(--line-soft);
+  position:sticky;top:0;background:var(--surface);z-index:2;
+}
+.modal-head h3{font-size:16.5px;font-weight:700}
+.modal-head p{font-size:12.5px;color:var(--txt-mute);margin-top:3px}
+.modal-close{
+  width:32px;height:32px;flex-shrink:0;border-radius:9px;cursor:pointer;
+  border:1px solid var(--line);background:rgba(148,163,184,.08);
+  color:var(--txt-dim);font-size:19px;line-height:1;transition:all .16s ease;
+}
+.modal-close:hover{background:rgba(239,68,68,.16);color:#fca5a5}
+.modal-body{padding:22px 24px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 22px;margin-bottom:22px}
+.detail-item{display:flex;flex-direction:column;gap:2px}
+.detail-item label{font-size:10.5px;color:var(--txt-mute);text-transform:uppercase;letter-spacing:.7px;font-weight:600}
+.detail-item span{font-size:13px;color:var(--txt)}
+.modal-section-title{
+  font-size:11.5px;text-transform:uppercase;letter-spacing:1px;color:var(--cyan);
+  font-weight:700;margin:0 0 12px;padding-top:6px;
+}
+.modal-back{
+  display:inline-flex;align-items:center;gap:4px;margin-bottom:16px;padding:7px 12px;
+  border-radius:9px;border:1px solid var(--line);background:rgba(148,163,184,.08);
+  color:var(--txt-dim);font-size:12px;cursor:pointer;transition:all .16s ease;
+}
+.modal-back:hover{background:rgba(59,130,246,.14);color:var(--txt)}
+.klm-list{display:flex;flex-direction:column;gap:8px}
+.klm-item{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:11px 14px;border-radius:11px;border:1px solid var(--line);
+  background:rgba(148,163,184,.05);cursor:pointer;transition:all .16s ease;
+}
+.klm-item:hover{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.35)}
+.klm-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.klm-main b{font-size:13px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.klm-sub{font-size:11px;color:var(--txt-mute)}
+
+/* ---------- JADWAL RENCANA SURVAILEN ---------- */
+.sv-controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-bottom:14px}
+.sv-lbl{font-size:12px;color:var(--txt-mute);text-transform:uppercase;letter-spacing:.6px}
+.sv-lbl:not(:first-child){margin-left:12px}
+.sv-chips{display:flex;flex-wrap:wrap;gap:6px}
+.sv-chip{
+  padding:6px 14px;border-radius:99px;cursor:pointer;
+  border:1px solid var(--line);background:rgba(148,163,184,.07);color:var(--txt-dim);
+  font-family:var(--font);font-size:12.5px;font-weight:600;transition:all .16s ease;
+}
+.sv-chip:hover{border-color:rgba(59,130,246,.4);color:var(--txt)}
+.sv-chip.on{background:rgba(59,130,246,.2);border-color:rgba(59,130,246,.6);color:var(--txt)}
+.sv-table{width:100%;min-width:780px;border-collapse:collapse;table-layout:fixed;font-size:12.5px}
+.sv-table thead th{
+  padding:9px 0;text-align:center;font-weight:650;font-size:11px;
+  text-transform:uppercase;letter-spacing:.6px;color:var(--txt-mute);
+  background:rgba(148,163,184,.055);border-bottom:1px solid var(--line);
+}
+.sv-table th.nm,.sv-table td.nm{
+  text-align:left;width:220px;padding-left:14px;padding-right:8px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.sv-table td{padding:6px 0;text-align:center;border-bottom:1px solid var(--line-soft);color:var(--txt-dim)}
+.sv-table td.nm{color:var(--txt);font-weight:550}
+.sv-table .now{background:rgba(59,130,246,.09)}
+.sv-table th.now{color:var(--blue)}
+.sv-table th.tot,.sv-table td.tot{width:56px;font-weight:700;color:var(--txt)}
+.sv-table tr.gt td{border-top:1px solid var(--line);border-bottom:0;font-weight:700;color:var(--txt)}
+.sv-cell{display:block;height:16px;margin:0 4px;border-radius:5px;cursor:default}
+.sv-empty{white-space:normal!important;padding:22px 14px!important;color:var(--txt-mute)!important;font-weight:400!important}
+
+/* ---------- FILTER BULAN ---------- */
+.filterbar{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;
+  padding:12px 16px;margin-bottom:20px;border-radius:12px;
+  background:var(--surface);border:1px solid var(--line);
+  transition:border-color .2s ease,background .25s ease;
+}
+.filterbar.active{border-color:rgba(59,130,246,.55);background:linear-gradient(90deg,rgba(59,130,246,.10),var(--surface))}
+.fb-group{display:flex;align-items:center;gap:8px}
+.fb-group label,.fb-check{font-size:12px;color:var(--txt-mute);text-transform:uppercase;letter-spacing:.6px}
+.fb-check{display:flex;align-items:center;gap:7px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:12.5px;color:var(--txt-dim)}
+.fb-check input{accent-color:var(--blue);cursor:pointer}
+.fb-sep{font-size:12px;color:var(--txt-mute)}
+.fb-info{margin-left:auto;font-size:12.5px;color:var(--txt-dim);text-align:right}
+
+/* ---------- PETA ---------- */
+.map-layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:16px}
+.map-box{
+  position:relative;z-index:0;isolation:isolate;
+  height:560px;border-radius:12px;overflow:hidden;
+  border:1px solid var(--line);background:var(--surface-2);
+}
+.map-side{
+  display:flex;flex-direction:column;gap:6px;
+  max-height:560px;overflow-y:auto;padding-right:2px;
+}
+.map-side-title{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--txt-mute);font-weight:650;margin-bottom:4px}
+.map-rank-item{
+  display:grid;grid-template-columns:1fr 34px;gap:2px 10px;align-items:center;
+  padding:9px 11px;border-radius:10px;cursor:pointer;
+  border:1px solid var(--line-soft);background:rgba(148,163,184,.05);
+  transition:background .14s ease,border-color .14s ease;
+}
+.map-rank-item:hover{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.35)}
+.map-rank-name{font-size:12.5px;color:var(--txt);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.map-rank-val{font-size:14px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.map-rank-sub{grid-column:1 / -1;font-size:11px;color:var(--txt-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.map-rank-bar{grid-column:1 / -1;height:5px;border-radius:99px;background:rgba(148,163,184,.14);overflow:hidden;margin-top:3px}
+.map-rank-bar span{display:block;height:100%;border-radius:99px}
+.map-note{margin-top:12px;font-size:12px;color:var(--txt-mute);line-height:1.6}
+.chart-note{margin-top:10px;font-size:11.5px;color:var(--txt-mute);line-height:1.5}
+.chart-note:empty{display:none;margin:0}
+.map-note-pending:empty{display:none;margin:0}
+.map-note-pending{color:var(--amber)}
+.map-empty{padding:22px 8px;text-align:center;color:var(--txt-mute);font-size:13px}
+
+.leaflet-container{font-family:var(--font);background:var(--surface-2)}
+.map-dark .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.88) saturate(.55)}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--surface);color:var(--txt);border:1px solid var(--line)}
+.leaflet-popup-content{margin:13px 16px;font-size:12.5px;line-height:1.55}
+.leaflet-container a.leaflet-popup-close-button{color:var(--txt-mute)}
+.leaflet-control-attribution{background:rgba(11,16,32,.72)!important;color:#94a3b8!important;font-size:10px!important}
+.leaflet-control-attribution a{color:#cbd5e1!important}
+:root[data-theme="light"] .leaflet-control-attribution{background:rgba(255,255,255,.8)!important;color:#475569!important}
+:root[data-theme="light"] .leaflet-control-attribution a{color:#1d4ed8!important}
+.map-count{
+  background:transparent;border:0;box-shadow:none;padding:0;
+  color:var(--txt);font-weight:800;font-size:12px;
+  text-shadow:0 0 3px var(--bg),0 0 3px var(--bg);
+}
+.map-count::before{display:none}
+.mp-title{display:block;font-size:14px;font-weight:700;color:var(--txt)}
+.mp-sub{display:block;color:var(--txt-mute);font-size:11.5px;margin-bottom:8px}
+.mp-row{display:flex;justify-content:space-between;gap:18px;color:var(--txt-dim)}
+.mp-row b{color:var(--txt);font-variant-numeric:tabular-nums}
+.mp-row-active b{color:var(--blue)}
+.mp-row-active span{color:var(--txt)}
+.mp-list{margin:8px 0 0;padding-top:8px;border-top:1px solid var(--line-soft);color:var(--txt-dim);font-size:11.5px}
+.mp-list div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.mp-list .mp-name{cursor:pointer;color:var(--blue)}
+.mp-list .mp-name:hover{text-decoration:underline}
+.mp-list .mp-more{color:var(--txt-mute);cursor:default}
+.mp-approx{margin-top:8px;font-size:11px;color:var(--amber)}
+.mp-pending{margin-top:4px;font-size:11px;color:var(--txt-mute)}
+
+/* ---------- RESPONSIVE ---------- */
+@media(max-width:1180px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .kpi-grid-3{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:980px){
+  .grid-2{grid-template-columns:1fr}
+  .fb-info{margin-left:0;text-align:left;width:100%}
+  .map-layout{grid-template-columns:1fr}
+  .map-box{height:420px}
+  .map-side{max-height:none}
+  .sidebar{position:fixed;z-index:60;transform:translateX(-100%)}
+  .sidebar.open{transform:none;box-shadow:0 0 60px rgba(0,0,0,.6)}
+  .hamburger{display:block}
+  .topbar{padding:16px 18px}
+  .content{padding:18px 18px 36px}
+}
+@media(max-width:640px){
+  .kpi-grid,.kpi-grid-3{grid-template-columns:1fr}
+  .kpi-value{font-size:27px}
+  .detail-grid{grid-template-columns:1fr}
+  .funnel-row{grid-template-columns:130px 1fr 44px;gap:10px}
+  .filters input[type=search]{min-width:100%}
+  .topbar-title h1{font-size:16.5px}
+}
+</style>
+  <style>
+.brand-mark{
+  width:52px;height:52px;border-radius:14px;
+  background:linear-gradient(135deg,#7c3aed,#2563eb 55%,#06b6d4);
+  box-shadow:0 6px 18px rgba(59,130,246,.30),0 0 0 1px rgba(255,255,255,.10);
+  position:relative;font-size:0;color:transparent;
+}
+.brand-mark::after{content:"";position:absolute;inset:12px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect x='3' y='14' width='5' height='11' rx='1.5' fill='white'/%3E%3Crect x='11.5' y='8' width='5' height='17' rx='1.5' fill='white'/%3E%3Crect x='20' y='3' width='5' height='22' rx='1.5' fill='white'/%3E%3C/svg%3E") center/contain no-repeat;}
+.demo-badge{display:inline-block;margin-left:8px;padding:2px 9px;border-radius:999px;background:#FFF4DB;color:#8A5A00;
+  font-size:11px;font-weight:700;vertical-align:middle;letter-spacing:.02em}
+.demo-back{display:block;margin:10px 16px 0;font-size:12.5px;color:#60a5fa;text-decoration:none}
+.demo-back:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark" role="img" aria-label="Logo demo"></div>
+        <div class="brand-text">
+          <strong>BSPJI</strong>
+          <span>Dashboard LSPro</span>
+        </div>
+      </div>
+
+      <a class="demo-back" href="/proyek/dashboard-kinerja-lspro/" target="_top">&larr; Kembali ke studi kasus</a>
+      <nav class="nav">
+        <button class="nav-item active" data-page="overview">
+          <span class="nav-ico">◎</span><span>Ringkasan Eksekutif</span>
+        </button>
+        <button class="nav-item" data-page="klien">
+          <span class="nav-ico">▤</span><span>Klien &amp; Permohonan</span>
+        </button>
+        <button class="nav-item" data-page="jadwal">
+          <span class="nav-ico">◷</span><span>Jadwal &amp; Progres Audit</span>
+        </button>
+        <button class="nav-item" data-page="sla">
+          <span class="nav-ico">◑</span><span>SLA &amp; Kepatuhan</span>
+        </button>
+        <button class="nav-item" data-page="komoditas">
+          <span class="nav-ico">◈</span><span>Komoditas &amp; Geografis</span>
+        </button>
+        <button class="nav-item" data-page="peta">
+          <span class="nav-ico">◉</span><span>Peta Sebaran</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="sync">
+          <span class="dot" id="syncDot"></span>
+          <div>
+            <div class="sync-label">Data live</div>
+            <div class="sync-time" id="syncTime">memuat…</div>
+          </div>
+        </div>
+        <button class="btn-refresh" id="btnRefresh">Muat Ulang Data</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="hamburger" id="btnMenu" aria-label="Menu">≡</button>
+        <div class="topbar-title">
+          <h1 id="pageTitle">Ringkasan Eksekutif<span class="demo-badge">DEMO · data fiktif</span></h1>
+          <p id="pageSub">Gambaran menyeluruh kinerja sertifikasi LSPro</p>
+        </div>
+        <div class="topbar-filter">
+          <label>Tahun</label>
+          <select id="filterTahun"><option value="">Semua</option></select>
+        </div>
+        <div class="theme-toggle" id="themeToggle">
+          <button class="theme-btn" data-theme-choice="dark" title="Dark mode">🌙</button>
+          <button class="theme-btn" data-theme-choice="light" title="Light mode">☀️</button>
+        </div>
+      </header>
+
+      <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <p>Mengambil data terbaru dari Google Sheets…</p>
+      </div>
+
+      <div class="error-box" id="errorBox" hidden></div>
+
+      <div class="content" id="content" hidden>
+
+        <!-- ========== FILTER PERIODE BULAN (berlaku untuk semua halaman) ========== -->
+        <div class="filterbar" id="filterbar">
+          <div class="fb-group">
+            <label for="filterBulanDari">Periode bulan</label>
+            <select id="filterBulanDari"></select>
+            <span class="fb-sep">s.d.</span>
+            <select id="filterBulanSampai"></select>
+          </div>
+          <div class="fb-group">
+            <label for="filterDasar">Berdasarkan</label>
+            <select id="filterDasar"></select>
+          </div>
+          <label class="fb-check"><input type="checkbox" id="filterTanpaTanggal"> Sertakan kasus tanpa tanggal</label>
+          <button class="btn-mini" id="btnResetBulan" type="button">Reset bulan</button>
+          <span class="fb-info" id="filterInfo"></span>
+        </div>
+
+        <!-- ========== PAGE 1: OVERVIEW ========== -->
+        <section class="page active" id="page-overview">
+          <div class="kpi-grid">
+            <div class="kpi kpi-blue">
+              <div class="kpi-label">Total Permohonan</div>
+              <div class="kpi-value" id="kpiTotal">0</div>
+              <div class="kpi-foot" id="kpiTotalFoot">—</div>
+            </div>
+            <div class="kpi kpi-amber">
+              <div class="kpi-label">Sedang Berjalan</div>
+              <div class="kpi-value" id="kpiAktif">0</div>
+              <div class="kpi-foot" id="kpiAktifFoot">—</div>
+            </div>
+            <div class="kpi kpi-green">
+              <div class="kpi-label">Sertifikat Terbit</div>
+              <div class="kpi-value" id="kpiTerbit">0</div>
+              <div class="kpi-foot" id="kpiTerbitFoot">—</div>
+            </div>
+            <div class="kpi kpi-red">
+              <div class="kpi-label">Kepatuhan SLA</div>
+              <div class="kpi-value" id="kpiSla">0%</div>
+              <div class="kpi-foot" id="kpiSlaFoot">—</div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-head">
+                <h3>Tren Permohonan per Tahun</h3>
+                <span class="card-tag">Volume</span>
+              </div>
+              <div class="chart-wrap"><canvas id="chTrenTahun" title="Klik batang untuk lihat daftar perusahaan"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-head">
+                <h3>Status Akhir Permohonan</h3>
+                <span class="card-tag">Distribusi</span>
+              </div>
+              <div class="chart-wrap"><canvas id="chStatus" title="Klik untuk lihat daftar perusahaan"></canvas></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h3>Funnel Tahapan Proses Sertifikasi</h3>
+              <span class="card-tag">Pipeline</span>
+            </div>
+            <div class="funnel" id="funnelOverview"></div>
+          </div>
+
+          <div class="card card-alert">
+            <div class="card-head">
+              <h3>Peringatan Kasus Kritis</h3>
+              <span class="card-tag tag-red" id="alertCount">0 kasus</span>
+            </div>
+            <div class="table-scroll">
+              <table class="tbl">
+                <thead>
+                  <tr><th>No</th><th>Perusahaan</th><th>Tahapan Saat Ini</th><th>Batas Tutup Temuan</th><th>Sisa Hari</th></tr>
+                </thead>
+                <tbody id="tblAlert"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== PAGE 2: KLIEN ========== -->
+        <section class="page" id="page-klien">
+          <div class="kpi-grid kpi-grid-3">
+            <div class="kpi kpi-blue">
+              <div class="kpi-label">Klien Unik</div>
+              <div class="kpi-value" id="kpiKlienUnik">0</div>
+              <div class="kpi-foot">Perusahaan terdaftar</div>
+            </div>
+            <div class="kpi kpi-violet">
+              <div class="kpi-label">Sertifikasi Awal</div>
+              <div class="kpi-value" id="kpiAwal">0</div>
+              <div class="kpi-foot">Klien baru</div>
+            </div>
+            <div class="kpi kpi-teal">
+              <div class="kpi-label">Survailen / Perluasan</div>
+              <div class="kpi-value" id="kpiSurvailen">0</div>
+              <div class="kpi-foot">Klien berulang</div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-head"><h3>Jenis Permohonan</h3><span class="card-tag">Skema</span></div>
+              <div class="chart-wrap"><canvas id="chJenisPermohonan" title="Klik untuk lihat daftar perusahaan"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h3>Jenis Audit</h3><span class="card-tag">Tipe</span></div>
+              <div class="chart-wrap"><canvas id="chJenisAudit" title="Klik batang untuk lihat daftar perusahaan"></canvas></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h3>Daftar Klien</h3>
+              <div class="filters">
+                <input type="search" id="searchKlien" placeholder="Cari perusahaan / produk / merk…">
+                <select id="filterStatusKlien"><option value="">Semua Status</option></select>
+                <select id="filterAuditKlien"><option value="">Semua Jenis Audit</option></select>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table class="tbl tbl-hover">
+                <thead>
+                  <tr><th>No</th><th>Perusahaan</th><th>Komoditi</th><th>Jenis Audit</th><th>Provinsi</th><th>Status</th><th>Detail</th></tr>
+                </thead>
+                <tbody id="tblKlien"></tbody>
+              </table>
+            </div>
+            <div class="tbl-foot"><span id="klienCount">0 data</span></div>
+          </div>
+        </section>
+
+        <!-- ========== PAGE 3: JADWAL ========== -->
+        <section class="page" id="page-jadwal">
+          <div class="kpi-grid kpi-grid-3">
+            <div class="kpi kpi-amber">
+              <div class="kpi-label">Kasus Aktif</div>
+              <div class="kpi-value" id="kpiJadwalAktif">0</div>
+              <div class="kpi-foot">Belum selesai</div>
+            </div>
+            <div class="kpi kpi-red">
+              <div class="kpi-label">Lewat Batas Temuan</div>
+              <div class="kpi-value" id="kpiLewatBatas">0</div>
+              <div class="kpi-foot">Perlu tindak lanjut</div>
+            </div>
+            <div class="kpi kpi-teal">
+              <div class="kpi-label">Audit Bulan Ini</div>
+              <div class="kpi-value" id="kpiAuditBulanIni">0</div>
+              <div class="kpi-foot">Audit kesesuaian</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3>Linimasa Audit Kesesuaian Terdekat</h3><span class="card-tag">Reminder</span></div>
+            <div id="reminderSummary"></div>
+            <div class="timeline" id="timelineAudit"></div>
+          </div>
+
+          <div class="card" id="cardSurvailen">
+            <div class="card-head">
+              <h3>Jadwal Rencana Survailen</h3>
+              <span class="card-tag">Per bulan</span>
+            </div>
+            <div class="sv-controls">
+              <span class="sv-lbl">Survailen</span>
+              <span class="sv-chips" id="svChips"></span>
+              <span class="sv-lbl">Tahun jadwal</span>
+              <select id="svTahun" aria-label="Tahun jadwal survailen"></select>
+            </div>
+            <div class="rm-legend" id="svLegend"></div>
+            <div class="table-scroll"><table class="sv-table" id="svTable"></table></div>
+            <p class="tbl-foot" id="svNote"></p>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-head"><h3>Posisi Tahapan Kasus Aktif</h3><span class="card-tag">Progres</span></div>
+              <div class="chart-wrap"><canvas id="chTahapan" title="Klik batang untuk lihat daftar kasus"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h3>Jenis Dinas Audit</h3><span class="card-tag">Logistik</span></div>
+              <div class="chart-wrap"><canvas id="chJenisDinas" title="Klik untuk lihat daftar perusahaan"></canvas></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h3>Monitoring Progres Kasus Aktif</h3>
+              <div class="filters">
+                <input type="search" id="searchJadwal" placeholder="Cari perusahaan…">
+                <select id="filterTahapan"><option value="">Semua Tahapan</option></select>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table class="tbl">
+                <thead>
+                  <tr><th>No</th><th>Perusahaan</th><th>Tahapan</th><th>Tgl SPK</th><th>Audit Kesesuaian</th><th>Lead Auditor</th><th>Progres</th></tr>
+                </thead>
+                <tbody id="tblJadwal"></tbody>
+              </table>
+            </div>
+            <div class="tbl-foot"><span id="jadwalCount">0 data</span></div>
+          </div>
+        </section>
+
+        <!-- ========== PAGE 4: SLA ========== -->
+        <section class="page" id="page-sla">
+          <div class="kpi-grid">
+            <div class="kpi kpi-green">
+              <div class="kpi-label">Memenuhi SLA</div>
+              <div class="kpi-value" id="kpiSlaOk">0</div>
+              <div class="kpi-foot" id="kpiSlaOkFoot">—</div>
+            </div>
+            <div class="kpi kpi-red">
+              <div class="kpi-label">Tidak Memenuhi</div>
+              <div class="kpi-value" id="kpiSlaNo">0</div>
+              <div class="kpi-foot" id="kpiSlaNoFoot">—</div>
+            </div>
+            <div class="kpi kpi-blue">
+              <div class="kpi-label">Rata-rata Total Proses</div>
+              <div class="kpi-value" id="kpiAvgTotal">0</div>
+              <div class="kpi-foot" id="kpiAvgTotalFoot">hari kalender</div>
+            </div>
+            <div class="kpi kpi-violet">
+              <div class="kpi-label">Rata-rata LSPro → Draft</div>
+              <div class="kpi-value" id="kpiAvgDraft">0</div>
+              <div class="kpi-foot" id="kpiAvgDraftFoot">hari kerja</div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-head"><h3>Kepatuhan SLA per Tahun</h3><span class="card-tag">Tren</span></div>
+              <div class="chart-wrap"><canvas id="chSlaTahun" title="Klik batang untuk lihat daftar kasus"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h3>Kepatuhan per Kelas SPM</h3><span class="card-tag">SPM</span></div>
+              <div class="chart-wrap"><canvas id="chSlaSpm" title="Klik batang untuk lihat daftar kasus"></canvas></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3>Bottleneck: Rata-rata Durasi per Tahapan</h3><span class="card-tag">HK = hari kerja</span></div>
+            <div class="chart-wrap chart-tall"><canvas id="chBottleneck"></canvas></div>
+            <p class="tbl-foot" id="bottleneckNote"></p>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3>Rata-rata Tiap Tahap: Memenuhi vs Tidak Memenuhi SLA</h3><span class="card-tag">Klien vs BSPJI</span></div>
+            <div class="chart-wrap chart-tall"><canvas id="chBottleneckSla"></canvas></div>
+            <p class="chart-note">"Sisi Klien" / "Sisi BSPJI" / "Campuran" adalah dugaan dari nama tahapnya (sheet tidak mencatat penyebab keterlambatan secara eksplisit), bukan fakta pasti. Beberapa tahap punya jumlah kasus (n, lihat saat hover) yang sangat kecil — anggap sebagai anekdot, bukan pola, kalau n di bawah ~10. "LSPro → Draft" (angka total yang dibandingkan ke SPM) sengaja tidak diikutkan di sini karena tahap-tahap ini bisa saling tumpang tindih waktunya, jadi tidak bisa dijumlah untuk membuktikan asal totalnya.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3>10 Kasus Proses Terlama (LSPro → Terbit)</h3><span class="card-tag tag-red">Prioritas Evaluasi</span></div>
+            <div class="table-scroll">
+              <table class="tbl">
+                <thead>
+                  <tr><th>No</th><th>Perusahaan</th><th>Komoditi</th><th>SPM</th><th>Total Hari</th><th>SLA</th></tr>
+                </thead>
+                <tbody id="tblTerlama"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== PAGE 5: KOMODITAS ========== -->
+        <section class="page" id="page-komoditas">
+          <div class="kpi-grid kpi-grid-3">
+            <div class="kpi kpi-teal">
+              <div class="kpi-label">Jenis Komoditi</div>
+              <div class="kpi-value" id="kpiKomoditiCount">0</div>
+              <div class="kpi-foot">Ragam produk</div>
+            </div>
+            <div class="kpi kpi-blue">
+              <div class="kpi-label">Provinsi Terlayani</div>
+              <div class="kpi-value" id="kpiProvinsiCount">0</div>
+              <div class="kpi-foot">Sebaran wilayah</div>
+            </div>
+            <div class="kpi kpi-violet">
+              <div class="kpi-label">Rasio SNI Wajib</div>
+              <div class="kpi-value" id="kpiWajib">0%</div>
+              <div class="kpi-foot" id="kpiWajibFoot">—</div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-head"><h3>Distribusi Komoditi</h3><span class="card-tag">Portofolio</span></div>
+              <div class="chart-wrap chart-tall"><canvas id="chKomoditi" title="Klik batang untuk lihat daftar perusahaan"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h3>Wajib vs Sukarela</h3><span class="card-tag">Skema SNI</span></div>
+              <div class="chart-wrap"><canvas id="chWajib" title="Klik untuk lihat daftar perusahaan"></canvas></div>
+              <p class="chart-note" id="chWajibNote"></p>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-head"><h3>Sebaran Provinsi</h3><span class="card-tag">Geografis</span></div>
+              <div class="chart-wrap chart-tall"><canvas id="chProvinsi" title="Klik batang untuk lihat daftar perusahaan"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h3>Top Kabupaten / Kota</h3><span class="card-tag">Wilayah</span></div>
+              <div class="chart-wrap chart-tall"><canvas id="chKabKota" title="Klik batang untuk lihat daftar perusahaan"></canvas></div>
+              <p class="chart-note" id="chKabKotaNote"></p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3>Matriks Komoditi per Provinsi</h3><span class="card-tag">Pemetaan</span></div>
+            <p class="chart-note" id="matriksNote"></p>
+            <div class="table-scroll">
+              <table class="tbl" id="tblMatriks">
+                <thead id="matriksHead"></thead>
+                <tbody id="matriksBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== PAGE 6: PETA ========== -->
+        <section class="page" id="page-peta">
+          <div class="kpi-grid kpi-grid-3">
+            <div class="kpi kpi-teal">
+              <div class="kpi-label">Wilayah Terpetakan</div>
+              <div class="kpi-value" id="kpiMapWilayah">0</div>
+              <div class="kpi-foot" id="kpiMapWilayahFoot">Kab/Kota dan provinsi</div>
+            </div>
+            <div class="kpi kpi-blue">
+              <div class="kpi-label" id="kpiMapTotalLabel">Permohonan di Peta</div>
+              <div class="kpi-value" id="kpiMapTotal">0</div>
+              <div class="kpi-foot" id="kpiMapTotalFoot">—</div>
+            </div>
+            <div class="kpi kpi-amber">
+              <div class="kpi-label">Tanpa Koordinat</div>
+              <div class="kpi-value" id="kpiMapMiss">0</div>
+              <div class="kpi-foot" id="kpiMapMissFoot">—</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h3 id="petaTitle">Peta Sebaran Permohonan per Kab/Kota</h3>
+              <div class="filters">
+                <div class="sv-chips" id="petaModeChips">
+                  <button type="button" class="sv-chip on" data-mode="permohonan">Permohonan</button>
+                  <button type="button" class="sv-chip" data-mode="perusahaan">Perusahaan unik</button>
+                </div>
+                <select id="filterPetaDinas"><option value="">Semua Jenis Dinas</option></select>
+              </div>
+            </div>
+            <div class="map-layout">
+              <div class="map-box" id="petaMap"></div>
+              <div class="map-side">
+                <div class="map-side-title">Wilayah terbanyak</div>
+                <div id="petaRank"></div>
+              </div>
+            </div>
+            <p class="map-note" id="petaNote"></p>
+            <p class="map-note map-note-pending" id="petaPending"></p>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal detail klien -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-box">
+      <div class="modal-head">
+        <div>
+          <h3 id="modalTitle">Detail</h3>
+          <p id="modalSub"></p>
+        </div>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+/* ================== GEO: koordinat wilayah untuk halaman Peta ==================
+ * Format: 'nama wilayah huruf kecil': [latitude, longitude]
+ * Koordinat kab/kota = titik ibu kota kabupaten/kota (perkiraan, cukup untuk peta bubble).
+ * Jika ada wilayah baru di Sheet yang belum terpetakan, halaman Peta akan menampilkan
+ * namanya di bagian catatan. Tambahkan barisnya di GEO.kabkota di bawah ini.
+ * Kunci memakai awalan 'kab. ' atau 'kota ' (huruf kecil).
+ */
+var GEO = {
+  kabkota: {
+    /* Riau */
+    'kab. bengkalis': [1.47, 102.10],
+    'kab. indragiri hilir': [-0.32, 103.15],
+    'kab. indragiri hulu': [-0.40, 102.53],
+    'kab. kampar': [0.30, 101.03],
+    'kab. kepulauan meranti': [0.83, 102.72],
+    'kab. kuantan singingi': [-0.50, 101.53],
+    'kab. pelalawan': [0.35, 101.95],
+    'kab. rokan hilir': [2.15, 100.80],
+    'kab. rokan hulu': [0.85, 100.30],
+    'kab. siak': [1.13, 102.05],
+    'kota dumai': [1.68, 101.45],
+    'kota pekanbaru': [0.51, 101.45],
+    /* Kepulauan Riau */
+    'kab. bintan': [1.10, 104.50],
+    'kab. karimun': [1.00, 103.40],
+    'kab. kepulauan anambas': [3.22, 106.23],
+    'kab. lingga': [-0.20, 104.60],
+    'kab. natuna': [3.95, 108.38],
+    'kota batam': [1.13, 104.05],
+    'kota tanjungpinang': [0.92, 104.45],
+    /* Sumatera Utara */
+    'kab. deli serdang': [3.55, 98.87],
+    'kab. labuhanbatu utara': [2.37, 99.83],
+    'kab. langkat': [3.75, 98.30],
+    'kota medan': [3.59, 98.67],
+    /* Sumatera Barat */
+    'kab. lima puluh kota': [-0.12, 100.65],
+    'kab. padang pariaman': [-0.60, 100.22],
+    'kota padang': [-0.95, 100.35],
+    /* Jambi */
+    'kab. batanghari': [-1.72, 103.13],
+    'kota jambi': [-1.60, 103.61],
+    /* Bali */
+    'kab. karangasem': [-8.45, 115.62]
+  },
+
+  /* Titik tengah provinsi: dipakai jika Kab/Kota kosong atau belum ada di daftar di atas */
+  provinsi: {
+    'aceh': [4.30, 96.90],
+    'sumatera utara': [2.10, 99.20],
+    'sumatera barat': [-0.85, 100.35],
+    'riau': [0.50, 101.75],
+    'jambi': [-1.60, 103.00],
+    'sumatera selatan': [-3.20, 104.20],
+    'bengkulu': [-3.80, 102.35],
+    'lampung': [-4.90, 105.20],
+    'kepulauan bangka belitung': [-2.35, 106.50],
+    'kepulauan riau': [1.00, 104.60],
+    'dki jakarta': [-6.21, 106.85],
+    'jawa barat': [-6.90, 107.60],
+    'banten': [-6.40, 106.15],
+    'jawa tengah': [-7.20, 110.20],
+    'di yogyakarta': [-7.85, 110.40],
+    'jawa timur': [-7.60, 112.20],
+    'bali': [-8.35, 115.15],
+    'nusa tenggara barat': [-8.65, 117.35],
+    'nusa tenggara timur': [-9.70, 121.50],
+    'kalimantan barat': [-0.05, 110.60],
+    'kalimantan tengah': [-1.70, 113.50],
+    'kalimantan selatan': [-3.10, 115.30],
+    'kalimantan timur': [0.50, 116.40],
+    'kalimantan utara': [3.00, 116.50],
+    'sulawesi utara': [1.00, 124.50],
+    'gorontalo': [0.70, 122.40],
+    'sulawesi tengah': [-1.40, 121.40],
+    'sulawesi barat': [-2.50, 119.30],
+    'sulawesi selatan': [-3.70, 120.00],
+    'sulawesi tenggara': [-4.10, 122.10],
+    'maluku': [-3.20, 129.00],
+    'maluku utara': [1.50, 127.80],
+    'papua barat': [-1.30, 133.00],
+    'papua': [-4.00, 138.00]
+  },
+
+  alias: {
+    'sumut': 'sumatera utara', 'sumbar': 'sumatera barat', 'sumsel': 'sumatera selatan',
+    'kepri': 'kepulauan riau', 'babel': 'kepulauan bangka belitung', 'jakarta': 'dki jakarta',
+    'yogyakarta': 'di yogyakarta', 'diy': 'di yogyakarta', 'ntb': 'nusa tenggara barat', 'ntt': 'nusa tenggara timur'
+  }
+};
+
+function geoNorm(s) {
+  return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function geoKabKey(s) {
+  var k = geoNorm(s);
+  k = k.replace(/^kabupaten\s+/, 'kab. ').replace(/^kab\s+/, 'kab. ').replace(/^kab\.(?=\S)/, 'kab. ');
+  k = k.replace(/^kota\.?\s*/, 'kota ');
+  return k;
+}
+
+function geoProvKey(s) {
+  var k = geoNorm(s).replace(/^provinsi\s+/, '');
+  return GEO.alias[k] || k;
+}
+
+/* Mengembalikan { key, label, lat, lng, level } atau null jika tidak dikenali.
+ * level: 'kabkota' (titik kab/kota) atau 'provinsi' (perkiraan, titik tengah provinsi). */
+function geoLocate(provinsi, kabKota) {
+  var kk = geoKabKey(kabKota);
+  if (kk && GEO.kabkota[kk]) {
+    var c = GEO.kabkota[kk];
+    return { key: 'kk:' + kk, label: kabKota, lat: c[0], lng: c[1], level: 'kabkota' };
+  }
+  var pk = geoProvKey(provinsi);
+  if (pk && GEO.provinsi[pk]) {
+    var p = GEO.provinsi[pk];
+    return { key: 'pv:' + pk, label: provinsi, lat: p[0], lng: p[1], level: 'provinsi' };
+  }
+  return null;
+}
+</script>
+
+  <script src="data.js"></script>
+<script>
+// Versi demo statis: pengganti google.script.run. Data dari data.js (DUMMY / fiktif) yang dihasilkan
+// dengan menjalankan Code.js asli terhadap clone sheet LK berisi data dummy.
+(function () {
+  function Runner(ok, fail) { this.ok = ok; this.fail = fail; }
+  Runner.prototype.withSuccessHandler = function (fn) { return new Runner(fn, this.fail); };
+  Runner.prototype.withFailureHandler = function (fn) { return new Runner(this.ok, fn); };
+  Runner.prototype.getLKData = function () {
+    var ok = this.ok, fail = this.fail;
+    setTimeout(function () {
+      try {
+        var d = JSON.parse(JSON.stringify(window.__DEMO_DATA__));
+        var n = new Date(), p = function (x) { return String(x).padStart(2, '0'); };
+        d.fetchedAt = n.getFullYear() + '-' + p(n.getMonth() + 1) + '-' + p(n.getDate()) + ' ' + p(n.getHours()) + ':' + p(n.getMinutes()) + ':' + p(n.getSeconds());
+        if (ok) ok(d);
+      } catch (e) { if (fail) fail(e); }
+    }, 700);
+  };
+  window.google = { script: { run: new Runner() } };
+})();
+</script>
+<script>
+/* ================== STATE ================== */
+var STATE = { rows: [], filtered: [], charts: {} };
+
+var TAHAPAN_ORDER = [
+  'Menunggu SPK', 'Penugasan Tim', 'Audit Kecukupan', 'Audit Kesesuaian',
+  'Pengujian Lab', 'Tutup Temuan', 'Penilaian & Keputusan', 'Draft & Terbit Sertifikat'
+];
+
+var PALETTE = ['#3b82f6', '#22d3ee', '#a855f7', '#f59e0b', '#22c55e', '#ef4444', '#14b8a6', '#f472b6', '#818cf8', '#facc15', '#fb7185', '#a3e635', '#38bdf8', '#e879f9'];
+
+/* Status akhir: kasus dengan status ini dianggap tidak lagi berjalan */
+var STATUS_FINAL = ['Terbit', 'Surat Keputusan', 'Dihentikan', 'Dibekukan'];
+
+/* ================== FILTER: TAHUN + PERIODE BULAN ================== */
+var FILTER = { tahun: '', bulanDari: 1, bulanSampai: 12, dasar: 'auto', tanpaTanggal: false };
+var BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+var BULAN_PENDEK = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+/* "Otomatis" = tanggal tahap pertama yang terisi, karena tanggal awal (SIINas, SPK) sering kosong di data lama. */
+var TANGGAL_AWAL = ['tglSiinas', 'tglMasukLspro', 'tglSpk', 'tglMulaiKecukupan', 'tglMulaiKesesuaian', 'tglUploadDraf', 'tglTerbitSertifikat'];
+var DASAR_TANGGAL = {
+  auto: {
+    label: 'Tanggal mulai kasus (otomatis)',
+    get: function (r) {
+      for (var i = 0; i < TANGGAL_AWAL.length; i++) { if (r[TANGGAL_AWAL[i]]) return toDate(r[TANGGAL_AWAL[i]]); }
+      return null;
+    }
+  },
+  tglMasukLspro: { label: 'Tgl Masuk LSPro', get: function (r) { return toDate(r.tglMasukLspro); } },
+  tglMulaiKesesuaian: { label: 'Tgl Audit Kesesuaian', get: function (r) { return toDate(r.tglMulaiKesesuaian); } },
+  tglTerbitSertifikat: { label: 'Tgl Terbit Sertifikat', get: function (r) { return toDate(r.tglTerbitSertifikat); } }
+};
+
+function bulanAktif() { return FILTER.bulanDari !== 1 || FILTER.bulanSampai !== 12; }
+
+/* Terapkan Tahun + Periode bulan ke STATE.filtered, lalu gambar ulang semua halaman. */
+function applyFilters() {
+  var byYear = STATE.rows.filter(function (r) { return !FILTER.tahun || r.tahun === FILTER.tahun; });
+  var tanpaTanggal = 0;
+  if (bulanAktif()) {
+    var get = DASAR_TANGGAL[FILTER.dasar].get;
+    STATE.filtered = byYear.filter(function (r) {
+      var dt = get(r);
+      if (!dt) { tanpaTanggal++; return FILTER.tanpaTanggal; }
+      var m = dt.getMonth() + 1;
+      return m >= FILTER.bulanDari && m <= FILTER.bulanSampai;
+    });
+  } else {
+    STATE.filtered = byYear;
+  }
+  updateFilterInfo(byYear.length, tanpaTanggal);
+  renderAll();
+}
+
+function updateFilterInfo(totalTahun, tanpaTanggal) {
+  var on = bulanAktif();
+  document.getElementById('filterbar').classList.toggle('active', on);
+  var info = document.getElementById('filterInfo');
+  if (!on) { info.textContent = 'Semua bulan · ' + STATE.filtered.length + ' kasus'; return; }
+  var rentang = FILTER.bulanDari === FILTER.bulanSampai
+    ? BULAN_PENDEK[FILTER.bulanDari - 1]
+    : BULAN_PENDEK[FILTER.bulanDari - 1] + ' – ' + BULAN_PENDEK[FILTER.bulanSampai - 1];
+  var txt = rentang + ' ' + (FILTER.tahun || '(semua tahun)') + ' · ' + STATE.filtered.length + ' dari ' + totalTahun + ' kasus';
+  if (tanpaTanggal) {
+    var belum = FILTER.dasar === 'auto' ? 'tanggal' : DASAR_TANGGAL[FILTER.dasar].label;
+    txt += FILTER.tanpaTanggal
+      ? ' · termasuk ' + tanpaTanggal + ' kasus yang belum punya ' + belum
+      : ' · ' + tanpaTanggal + ' kasus belum punya ' + belum + ' (tidak ikut)';
+  }
+  info.textContent = txt;
+}
+
+function initFilterBar() {
+  var dari = document.getElementById('filterBulanDari');
+  var sampai = document.getElementById('filterBulanSampai');
+  var dasar = document.getElementById('filterDasar');
+  var tanpa = document.getElementById('filterTanpaTanggal');
+  BULAN.forEach(function (n, i) {
+    dari.appendChild(new Option(n, i + 1));
+    sampai.appendChild(new Option(n, i + 1));
+  });
+  Object.keys(DASAR_TANGGAL).forEach(function (k) { dasar.appendChild(new Option(DASAR_TANGGAL[k].label, k)); });
+  dari.value = FILTER.bulanDari; sampai.value = FILTER.bulanSampai; dasar.value = FILTER.dasar;
+
+  // Rentang dijaga selalu valid: "dari" tidak boleh lewat "sampai" dan sebaliknya.
+  dari.addEventListener('change', function () {
+    FILTER.bulanDari = parseInt(dari.value, 10);
+    if (FILTER.bulanSampai < FILTER.bulanDari) { FILTER.bulanSampai = FILTER.bulanDari; sampai.value = FILTER.bulanSampai; }
+    applyFilters();
+  });
+  sampai.addEventListener('change', function () {
+    FILTER.bulanSampai = parseInt(sampai.value, 10);
+    if (FILTER.bulanDari > FILTER.bulanSampai) { FILTER.bulanDari = FILTER.bulanSampai; dari.value = FILTER.bulanDari; }
+    applyFilters();
+  });
+  dasar.addEventListener('change', function () { FILTER.dasar = dasar.value; applyFilters(); });
+  tanpa.addEventListener('change', function () { FILTER.tanpaTanggal = tanpa.checked; applyFilters(); });
+  document.getElementById('btnResetBulan').addEventListener('click', function () {
+    FILTER.bulanDari = 1; FILTER.bulanSampai = 12; FILTER.dasar = 'auto'; FILTER.tanpaTanggal = false;
+    dari.value = 1; sampai.value = 12; dasar.value = 'auto'; tanpa.checked = false;
+    applyFilters();
+  });
+}
+
+/* ================== BOOTSTRAP ================== */
+document.addEventListener('DOMContentLoaded', function () {
+  bindTheme();
+  bindNav();
+  bindTopbar();
+  initFilterBar();
+  initSurvailen();
+  bindModal();
+  loadData(false);
+  document.getElementById('btnRefresh').addEventListener('click', function () { loadData(true); });
+});
+
+/* ================== THEME ================== */
+function bindTheme() {
+  var saved = localStorage.getItem('bspji-theme') || 'dark';
+  applyTheme(saved);
+  document.querySelectorAll('[data-theme-choice]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      applyTheme(btn.getAttribute('data-theme-choice'));
+    });
+  });
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('bspji-theme', theme);
+  document.querySelectorAll('[data-theme-choice]').forEach(function (btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-theme-choice') === theme);
+  });
+  updateChartTheme();
+  if (STATE.rows.length) renderAll();
+}
+
+function updateChartTheme() {
+  var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  CHART_DEFAULTS.color = isLight ? '#475569' : '#94a3b8';
+  CHART_DEFAULTS.gridColor = isLight ? 'rgba(15,23,42,.07)' : 'rgba(148,163,184,.09)';
+  CHART_DEFAULTS.tooltipBg = isLight ? '#ffffff' : '#1b2547';
+  CHART_DEFAULTS.tooltipTitle = isLight ? '#0f172a' : '#e8edf9';
+  CHART_DEFAULTS.tooltipBody = isLight ? '#334155' : '#cbd5e1';
+  CHART_DEFAULTS.borderColor = isLight ? '#ffffff' : '#151d3b';
+}
+
+/* force = true: lewati cache server (tombol "Muat Ulang Data") */
+function loadData(force) {
+  setSyncState('loading');
+  google.script.run
+    .withSuccessHandler(onDataLoaded)
+    .withFailureHandler(onDataError)
+    .getLKData(force === true);
+}
+
+function onDataLoaded(res) {
+  STATE.rows = res.rows || [];
+  document.getElementById('loader').hidden = true;
+  document.getElementById('errorBox').hidden = true;
+  document.getElementById('content').hidden = false;
+  setSyncState('ok', res.fetchedAt);
+  populateTahunFilter();
+  applyFilters();
+}
+
+function onDataError(err) {
+  document.getElementById('loader').hidden = true;
+  var box = document.getElementById('errorBox');
+  box.hidden = false;
+  box.textContent = 'Gagal memuat data: ' + (err && err.message ? err.message : err);
+  setSyncState('error');
+}
+
+function setSyncState(state, time) {
+  var dot = document.getElementById('syncDot');
+  var lbl = document.getElementById('syncTime');
+  dot.className = 'dot' + (state === 'loading' ? ' loading' : state === 'error' ? ' error' : '');
+  if (state === 'loading') lbl.textContent = 'memuat…';
+  else if (state === 'error') lbl.textContent = 'gagal memuat';
+  else lbl.textContent = time || '-';
+}
+
+/* ================== NAV / ROUTER ================== */
+var PAGE_META = {
+  overview: ['Ringkasan Eksekutif', 'Gambaran menyeluruh kinerja sertifikasi LSPro'],
+  klien: ['Klien & Permohonan', 'Profil pelanggan dan riwayat pengajuan sertifikasi'],
+  jadwal: ['Jadwal & Progres Audit', 'Monitoring tahapan dan linimasa audit berjalan'],
+  sla: ['SLA & Kepatuhan', 'Evaluasi mutu layanan dan bottleneck proses'],
+  komoditas: ['Komoditas & Geografis', 'Portofolio komoditi dan sebaran wilayah binaan'],
+  peta: ['Peta Sebaran', 'Sebaran permohonan sertifikasi per kabupaten/kota']
+};
+
+function bindNav() {
+  var items = document.querySelectorAll('.nav-item');
+  items.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      items.forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var page = btn.getAttribute('data-page');
+      document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('active'); });
+      document.getElementById('page-' + page).classList.add('active');
+      document.getElementById('pageTitle').textContent = PAGE_META[page][0];
+      document.getElementById('pageSub').textContent = PAGE_META[page][1];
+      document.getElementById('sidebar').classList.remove('open');
+      if (page === 'peta') onPetaShown();
+    });
+  });
+}
+
+function bindTopbar() {
+  document.getElementById('btnMenu').addEventListener('click', function () {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+  document.getElementById('filterTahun').addEventListener('change', function (e) {
+    FILTER.tahun = e.target.value;
+    applyFilters();
+  });
+}
+
+function populateTahunFilter() {
+  var years = uniq(STATE.rows.map(function (r) { return r.tahun; }).filter(Boolean)).sort();
+  var sel = document.getElementById('filterTahun');
+  sel.innerHTML = '<option value="">Semua</option>';
+  years.forEach(function (y) {
+    var opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    sel.appendChild(opt);
+  });
+  // Pertahankan pilihan tahun saat data dimuat ulang
+  sel.value = years.indexOf(FILTER.tahun) !== -1 ? FILTER.tahun : '';
+  FILTER.tahun = sel.value;
+}
+
+/* ================== HELPERS ================== */
+function uniq(arr) { return arr.filter(function (v, i) { return arr.indexOf(v) === i; }); }
+
+function countBy(arr, fn) {
+  var map = {};
+  arr.forEach(function (item) {
+    var k = fn(item) || '(Kosong)';
+    map[k] = (map[k] || 0) + 1;
+  });
+  return map;
+}
+
+function avg(nums) {
+  var valid = nums.filter(function (n) { return n !== null && n !== undefined && !isNaN(n); });
+  if (!valid.length) return 0;
+  return valid.reduce(function (a, b) { return a + b; }, 0) / valid.length;
+}
+
+/* Teks yyyy-MM-dd dibaca sebagai tanggal LOKAL (bukan UTC), supaya hitungan selisih hari tidak geser. */
+function toDate(s) {
+  if (!s) return null;
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  var d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function startOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+
+function escapeHtml(s) {
+  return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function daysBetween(a, b) {
+  if (!a || !b) return null;
+  return Math.round((b.getTime() - a.getTime()) / 86400000);
+}
+
+function destroyChart(id) { if (STATE.charts[id]) { STATE.charts[id].destroy(); delete STATE.charts[id]; } }
+
+var CHART_DEFAULTS = {
+  color: '#94a3b8',
+  gridColor: 'rgba(148,163,184,.09)',
+  tooltipBg: '#1b2547',
+  tooltipTitle: '#e8edf9',
+  tooltipBody: '#cbd5e1',
+  borderColor: '#151d3b'
+};
+
+function baseOpts(extra) {
+  var o = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: CHART_DEFAULTS.color, font: { size: 11.5 }, boxWidth: 12, padding: 14 } },
+      tooltip: { backgroundColor: CHART_DEFAULTS.tooltipBg, borderColor: 'rgba(148,163,184,.2)', borderWidth: 1, padding: 10, titleColor: CHART_DEFAULTS.tooltipTitle, bodyColor: CHART_DEFAULTS.tooltipBody }
+    },
+    scales: {}
+  };
+  return Object.assign(o, extra || {});
+}
+
+function axisScales(xTitle) {
+  return {
+    x: {
+      ticks: { color: CHART_DEFAULTS.color, font: { size: 11 } }, grid: { color: CHART_DEFAULTS.gridColor },
+      title: xTitle ? { display: true, text: xTitle, color: CHART_DEFAULTS.color, font: { size: 11, weight: '600' } } : undefined
+    },
+    y: { ticks: { color: CHART_DEFAULTS.color, font: { size: 11 } }, grid: { color: CHART_DEFAULTS.gridColor }, beginAtZero: true }
+  };
+}
+
+/* Tooltip tambahan "X perusahaan unik" di bawah angka permohonan, dipakai chart per-kategori
+ * (komoditi/provinsi/kab-kota) supaya kelihatan bedanya jumlah permohonan vs jumlah klien asli. */
+function uniqCompanyFooter(d, keyField) {
+  return function (items) {
+    var cat = items[0].label;
+    var n = uniq(d.filter(function (r) { return (r[keyField] || '(Kosong)') === cat; }).map(function (r) { return r.namaPerusahaan; })).length;
+    return n + ' perusahaan unik';
+  };
+}
+
+/* Status di Sheet yang menyebut tahapan proses secara eksplisit */
+var STATUS_TAHAPAN = {
+  'Audit T2': 'Audit Kesesuaian',
+  'Pengujian Laboratorium': 'Pengujian Lab',
+  'Tutup Temuan': 'Tutup Temuan',
+  'Penilaian Keputusan': 'Penilaian & Keputusan',
+  'Terbit Draft': 'Draft & Terbit Sertifikat'
+};
+
+/* Tahapan saat ini: tahap paling lanjut antara yang ditunjukkan kolom tanggal dan yang disebut kolom Status.
+   Tanggal tahap awal (mis. Tgl SPK) sering kosong, jadi Status dipakai agar kasus tidak jatuh ke "Menunggu SPK". */
+function currentStage(r) {
+  var byDate = 'Menunggu SPK';
+  if (r.tglTerbitSertifikat || r.tglUploadDraf) byDate = 'Draft & Terbit Sertifikat';
+  else if (r.tglKeputusan || r.tglPenilaian) byDate = 'Penilaian & Keputusan';
+  else if (r.tglSelesaiTutupTemuan || r.tglBatasTutupTemuan || r.tglBatasPerpanjangan) byDate = 'Tutup Temuan';
+  else if (r.tglMulaiUji1 || r.tglMulaiUji2) byDate = 'Pengujian Lab';
+  else if (r.tglMulaiKesesuaian) byDate = 'Audit Kesesuaian';
+  else if (r.tglMulaiKecukupan) byDate = 'Audit Kecukupan';
+  else if (r.tglPenugasanTim) byDate = 'Penugasan Tim';
+  var byStatus = STATUS_TAHAPAN[r.status];
+  return (byStatus && TAHAPAN_ORDER.indexOf(byStatus) > TAHAPAN_ORDER.indexOf(byDate)) ? byStatus : byDate;
+}
+
+/* Aktif = belum ditandai Selesai dan statusnya belum final. Status Pekerjaan sering kosong pada sertifikat yang sudah terbit,
+   jadi Status ikut dipakai. */
+function isActive(r) { return r.statusPekerjaan !== 'Selesai' && STATUS_FINAL.indexOf(r.status) === -1; }
+
+/* Rata-rata hanya dari nilai valid (angka >= 0). Nilai negatif = tanggal di Sheet tidak berurutan, diabaikan. */
+function validNums(nums) {
+  return nums.filter(function (n) { return n !== null && n !== undefined && !isNaN(n) && n >= 0; });
+}
+
+/* Lama proses kalender dari Masuk LSPro sampai Terbit Sertifikat (null jika salah satu tanggal kosong/tidak berurutan). */
+function lamaLsproKeTerbit(r) {
+  var a = toDate(r.tglMasukLspro), b = toDate(r.tglTerbitSertifikat);
+  var n = daysBetween(a, b);
+  return (n === null || n < 0) ? null : n;
+}
+
+/* Kasus aktif yang perlu perhatian: batas tutup temuan <= 14 hari lagi atau sudah lewat.
+   Dipakai bersama oleh tabel Peringatan (Ringkasan) dan KPI Lewat Batas Temuan (Jadwal). */
+function kasusKritis(d) {
+  var today = startOfDay(new Date());
+  return d.filter(isActive).map(function (r) {
+    var batas = toDate(r.tglBatasPerpanjangan) || toDate(r.tglBatasTutupTemuan);
+    return Object.assign({}, r, { batas: batas, sisa: batas ? daysBetween(today, batas) : null, stage: currentStage(r) });
+  }).filter(function (r) {
+    return r.sisa !== null && r.sisa <= 14 && !r.tglSelesaiTutupTemuan &&
+      TAHAPAN_ORDER.indexOf(r.stage) <= TAHAPAN_ORDER.indexOf('Tutup Temuan');
+  }).sort(function (a, b) { return a.sisa - b.sisa; });
+}
+
+/* Tahap tertinggi yang sudah dicapai kasus: 0 masuk, 1 SPK, 2 kecukupan, 3 kesesuaian, 4 penilaian, 5 terbit.
+   Tahap yang tanggalnya kosong tetap dianggap terlewati jika tahap sesudahnya sudah tercapai. */
+function funnelLevel(r) {
+  var lvl = 0;
+  if (r.tglSpk) lvl = 1;
+  if (r.tglMulaiKecukupan) lvl = 2;
+  if (r.tglMulaiKesesuaian) lvl = 3;
+  if (r.tglPenilaian || r.tglKeputusan) lvl = 4;
+  if (r.status === 'Terbit') lvl = 5;
+  return lvl;
+}
+
+/* ================== MASTER RENDER ================== */
+function renderAll() {
+  renderOverview();
+  renderKlien();
+  renderJadwal();
+  renderSla();
+  renderKomoditas();
+  renderPeta();
+}
+
+/* ================== PAGE 1: OVERVIEW ================== */
+function renderOverview() {
+  var d = STATE.filtered;
+  var total = d.length;
+  var aktif = d.filter(isActive);
+  var terbit = d.filter(function (r) { return r.status === 'Terbit'; });
+  var slaKnown = d.filter(function (r) { return r.sla === 'Memenuhi' || r.sla === 'Tidak memenuhi'; });
+  var slaOk = d.filter(function (r) { return r.sla === 'Memenuhi'; });
+  var slaPct = slaKnown.length ? Math.round((slaOk.length / slaKnown.length) * 100) : 0;
+
+  document.getElementById('kpiTotal').textContent = total;
+  document.getElementById('kpiTotalFoot').textContent = uniq(d.map(function (r) { return r.namaPerusahaan; })).length + ' klien unik';
+  document.getElementById('kpiAktif').textContent = aktif.length;
+  document.getElementById('kpiAktifFoot').textContent = Math.round((aktif.length / (total || 1)) * 100) + '% dari total';
+  document.getElementById('kpiTerbit').textContent = terbit.length;
+  document.getElementById('kpiTerbitFoot').textContent = 'Surat Keputusan: ' + d.filter(function (r) { return r.status === 'Surat Keputusan'; }).length;
+  document.getElementById('kpiSla').textContent = slaPct + '%';
+  document.getElementById('kpiSlaFoot').textContent = slaOk.length + ' dari ' + slaKnown.length + ' kasus dievaluasi';
+
+  // Tren per tahun
+  var byYear = countBy(d, function (r) { return r.tahun; });
+  var years = Object.keys(byYear).filter(function (y) { return y !== '(Kosong)'; }).sort();
+  destroyChart('chTrenTahun');
+  STATE.charts.chTrenTahun = new Chart(document.getElementById('chTrenTahun'), {
+    type: 'bar',
+    data: { labels: years, datasets: [{ label: 'Jumlah Permohonan', data: years.map(function (y) { return byYear[y]; }), backgroundColor: '#3b82f6', borderRadius: 8, maxBarThickness: 46 }] },
+    options: baseOpts({ scales: axisScales(), plugins: { legend: { display: false } }, onClick: clickOpenGroup(d, function (r) { return r.tahun; }, 'Permohonan Tahun'), onHover: hoverPointer })
+  });
+
+  // Status akhir
+  var statusKeyFn = function (r) { return r.status || 'Belum Ada'; };
+  var byStatus = countBy(d, statusKeyFn);
+  destroyChart('chStatus');
+  STATE.charts.chStatus = new Chart(document.getElementById('chStatus'), {
+    type: 'doughnut',
+    data: { labels: Object.keys(byStatus), datasets: [{ data: Object.values(byStatus), backgroundColor: PALETTE, borderColor: CHART_DEFAULTS.borderColor, borderWidth: 3 }] },
+    options: baseOpts({ cutout: '65%', onClick: clickOpenGroup(d, statusKeyFn, 'Status Akhir Permohonan'), onHover: hoverPointer })
+  });
+
+  // Funnel — jumlah kasus yang sudah mencapai tiap tahap (atau tahap sesudahnya).
+  // Tidak bergantung pada tanggal tahap sebelumnya, sehingga tahap yang tanggalnya kosong tidak memutus hitungan.
+  var reached = function (min) { return d.filter(function (r) { return funnelLevel(r) >= min; }).length; };
+  var labCount = d.filter(function (r) { return r.tglMulaiUji1 || r.tglMulaiUji2; }).length;
+  var stages = [
+    ['Permohonan Masuk', d.length],
+    ['SPK Terbit', reached(1)],
+    ['Audit Kecukupan', reached(2)],
+    ['Audit Kesesuaian', reached(3)],
+    ['Pengujian Lab (jika ada)', labCount],
+    ['Penilaian & Keputusan', reached(4)],
+    ['Sertifikat Terbit', reached(5)]
+  ];
+  var max = stages[0][1] || 1;
+  var funnelHtml = stages.map(function (s) {
+    var pct = Math.round((s[1] / max) * 100);
+    return '<div class="funnel-row"><span class="funnel-label">' + s[0] + '</span>' +
+      '<div class="funnel-bar"><div class="funnel-fill" style="width:' + pct + '%"></div></div>' +
+      '<span class="funnel-val">' + s[1] + '</span></div>';
+  }).join('');
+  document.getElementById('funnelOverview').innerHTML = funnelHtml;
+
+  // Alert kasus kritis: aktif, belum tutup temuan, & mendekati/lewat batas
+  var alerts = kasusKritis(d);
+
+  document.getElementById('alertCount').textContent = alerts.length + ' kasus';
+  document.getElementById('tblAlert').innerHTML = alerts.length ? alerts.slice(0, 10).map(function (r) {
+    var badge = r.sisa < 0 ? 'b-red' : r.sisa <= 7 ? 'b-amber' : 'b-blue';
+    var sisaTxt = r.sisa < 0 ? Math.abs(r.sisa) + ' hari lewat' : r.sisa + ' hari lagi';
+    return '<tr><td>' + escapeHtml(r.no) + '</td><td>' + escapeHtml(r.namaPerusahaan) + '</td><td>' + escapeHtml(r.stage) + '</td><td>' + (r.batas ? r.batas.toLocaleDateString('id-ID') : '-') + '</td><td><span class="badge ' + badge + '">' + sisaTxt + '</span></td></tr>';
+  }).join('') : '<tr><td colspan="5" class="tbl-empty">Tidak ada kasus mendekati batas waktu 🎉</td></tr>';
+}
+
+/* ================== PAGE 2: KLIEN ================== */
+var klienFilterState = { search: '', status: '', audit: '' };
+
+function renderKlien() {
+  var d = STATE.filtered;
+  document.getElementById('kpiKlienUnik').textContent = uniq(d.map(function (r) { return r.namaPerusahaan; })).length;
+  // Jenis audit di Sheet punya varian ("Sertifikasi Awal" dan "Sertifikasi Awal SIINas"); keduanya sertifikasi awal.
+  var isAwal = function (r) { return /^Sertifikasi Awal/i.test(r.jenisAudit || ''); };
+  document.getElementById('kpiAwal').textContent = d.filter(isAwal).length;
+  document.getElementById('kpiSurvailen').textContent = d.filter(function (r) { return r.jenisAudit && !isAwal(r); }).length;
+
+  var jenisPermohonanKeyFn = function (r) { return r.jenisPermohonan || 'Tidak diketahui'; };
+  var byJenis = countBy(d, jenisPermohonanKeyFn);
+  destroyChart('chJenisPermohonan');
+  STATE.charts.chJenisPermohonan = new Chart(document.getElementById('chJenisPermohonan'), {
+    type: 'pie',
+    data: { labels: Object.keys(byJenis), datasets: [{ data: Object.values(byJenis), backgroundColor: PALETTE, borderColor: CHART_DEFAULTS.borderColor, borderWidth: 3 }] },
+    options: baseOpts({ onClick: clickOpenGroup(d, jenisPermohonanKeyFn, 'Jenis Permohonan'), onHover: hoverPointer })
+  });
+
+  var jenisAuditKeyFn = function (r) { return r.jenisAudit || 'Tidak diketahui'; };
+  var byAudit = countBy(d, jenisAuditKeyFn);
+  destroyChart('chJenisAudit');
+  STATE.charts.chJenisAudit = new Chart(document.getElementById('chJenisAudit'), {
+    type: 'bar',
+    data: { labels: Object.keys(byAudit), datasets: [{ label: 'Jumlah', data: Object.values(byAudit), backgroundColor: '#a855f7', borderRadius: 8, maxBarThickness: 40 }] },
+    options: baseOpts({ indexAxis: 'y', scales: axisScales(), plugins: { legend: { display: false } }, onClick: clickOpenGroup(d, jenisAuditKeyFn, 'Jenis Audit'), onHover: hoverPointer })
+  });
+
+  // Populate filter dropdown sekali
+  var statusSel = document.getElementById('filterStatusKlien');
+  var auditSel = document.getElementById('filterAuditKlien');
+  if (statusSel.options.length <= 1) {
+    uniq(STATE.rows.map(function (r) { return r.status; }).filter(Boolean)).forEach(function (s) {
+      var o = document.createElement('option'); o.value = s; o.textContent = s; statusSel.appendChild(o);
+    });
+    uniq(STATE.rows.map(function (r) { return r.jenisAudit; }).filter(Boolean)).forEach(function (s) {
+      var o = document.createElement('option'); o.value = s; o.textContent = s; auditSel.appendChild(o);
+    });
+    document.getElementById('searchKlien').addEventListener('input', function (e) { klienFilterState.search = e.target.value.toLowerCase(); drawKlienTable(); });
+    statusSel.addEventListener('change', function (e) { klienFilterState.status = e.target.value; drawKlienTable(); });
+    auditSel.addEventListener('change', function (e) { klienFilterState.audit = e.target.value; drawKlienTable(); });
+    document.getElementById('tblKlien').addEventListener('click', function (e) {
+      var tr = e.target.closest('tr[data-no]');
+      if (tr) { MODAL_BACK = null; openKlienModal(tr.getAttribute('data-no')); }
+    });
+  }
+  drawKlienTable();
+}
+
+function drawKlienTable() {
+  var d = STATE.filtered.filter(function (r) {
+    var matchSearch = !klienFilterState.search ||
+      (r.namaPerusahaan + ' ' + r.produk + ' ' + r.merk).toLowerCase().indexOf(klienFilterState.search) !== -1;
+    var matchStatus = !klienFilterState.status || r.status === klienFilterState.status;
+    var matchAudit = !klienFilterState.audit || r.jenisAudit === klienFilterState.audit;
+    return matchSearch && matchStatus && matchAudit;
+  });
+
+  document.getElementById('klienCount').textContent = d.length + ' data';
+  document.getElementById('tblKlien').innerHTML = d.length ? d.map(function (r) {
+    var statusBadge = statusToBadge(r.status);
+    return '<tr data-no="' + escapeHtml(r.no) + '">' +
+      '<td>' + escapeHtml(r.no) + '</td><td>' + escapeHtml(r.namaPerusahaan) + '</td><td>' + escapeHtml(r.komoditi || '-') + '</td>' +
+      '<td>' + escapeHtml(r.jenisAudit || '-') + '</td><td>' + escapeHtml(r.provinsi || '-') + '</td>' +
+      '<td><span class="badge ' + statusBadge + '">' + escapeHtml(r.status || 'Belum Ada') + '</span></td>' +
+      '<td><button class="btn-mini">Lihat</button></td></tr>';
+  }).join('') : '<tr><td colspan="7" class="tbl-empty">Tidak ada data yang cocok</td></tr>';
+}
+
+function statusToBadge(status) {
+  if (status === 'Terbit') return 'b-green';
+  if (status === 'Surat Keputusan') return 'b-blue';
+  if (status === 'Dihentikan') return 'b-red';
+  return 'b-gray';
+}
+
+/* ---- Modal detail klien ---- */
+var MODAL_BACK = null; // { label, rows, reopen() } kalau modal detail dibuka lewat daftar (openKlienList / openCategoryModal)
+
+function closeModal() {
+  document.getElementById('modal').hidden = true;
+}
+
+function bindModal() {
+  document.getElementById('modal').hidden = true;
+  document.querySelectorAll('[data-close]').forEach(function (el) {
+    el.addEventListener('click', function (e) { e.stopPropagation(); closeModal(); });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeModal();
+  });
+  document.getElementById('modalBody').addEventListener('click', function (e) {
+    var item = e.target.closest('.klm-item[data-no]');
+    if (item) { openKlienModal(item.getAttribute('data-no')); return; }
+    var back = e.target.closest('#modalBackBtn');
+    if (back && MODAL_BACK) MODAL_BACK.reopen();
+  });
+}
+
+/** Daftar semua permohonan satu klien (dipakai saat nama klien punya lebih dari satu baris LK,
+ * misalnya beberapa sertifikat/tahun berbeda). Klik satu baris untuk lihat detail lengkapnya. */
+function openKlienList(nama, rows) {
+  if (!rows || !rows.length) return;
+  if (rows.length === 1) { MODAL_BACK = null; openKlienModal(rows[0].no); return; }
+  MODAL_BACK = { label: 'daftar permohonan ' + nama, rows: rows, reopen: function () { openKlienList(nama, rows); } };
+  document.getElementById('modalTitle').textContent = nama;
+  document.getElementById('modalSub').textContent = rows.length + ' permohonan';
+  var sorted = rows.slice().sort(function (a, b) { return (b.tahun || '').localeCompare(a.tahun || '') || (b.no || '').localeCompare(a.no || ''); });
+  document.getElementById('modalBody').innerHTML =
+    '<div class="modal-section-title">Semua Permohonan</div>' +
+    '<div class="klm-list">' + sorted.map(function (r) {
+      return '<div class="klm-item" data-no="' + escapeHtml(r.no) + '">' +
+        '<div class="klm-main"><b>' + escapeHtml(r.jenisAudit || 'Jenis audit -') + '</b>' +
+        '<span class="klm-sub">Tahun ' + escapeHtml(r.tahun || '-') + ' · No ' + escapeHtml(r.no) + '</span></div>' +
+        '<span class="badge ' + statusToBadge(r.status) + '">' + escapeHtml(r.status || 'Belum Ada') + '</span></div>';
+    }).join('') + '</div>';
+  document.getElementById('modal').hidden = false;
+}
+
+/** Daftar perusahaan pada satu kategori chart (irisan status/jenis/tahun/dst yang diklik).
+ * Klik satu baris untuk lihat detail lengkapnya; tombol Kembali membawa balik ke daftar ini. */
+function openCategoryModal(title, rows) {
+  MODAL_BACK = { label: title, rows: rows, reopen: function () { openCategoryModal(title, rows); } };
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSub').textContent = rows.length + ' permohonan';
+  if (!rows.length) {
+    document.getElementById('modalBody').innerHTML = '<p style="color:var(--txt-mute);font-size:13px">Tidak ada permohonan pada kategori ini.</p>';
+    document.getElementById('modal').hidden = false;
+    return;
+  }
+  var sorted = rows.slice().sort(function (a, b) { return (a.namaPerusahaan || '').localeCompare(b.namaPerusahaan || ''); });
+  document.getElementById('modalBody').innerHTML =
+    '<div class="modal-section-title">Daftar Perusahaan</div>' +
+    '<div class="klm-list">' + sorted.map(function (r) {
+      return '<div class="klm-item" data-no="' + escapeHtml(r.no) + '">' +
+        '<div class="klm-main"><b>' + escapeHtml(r.namaPerusahaan) + '</b>' +
+        '<span class="klm-sub">' + escapeHtml(r.jenisAudit || '-') + ' · Tahun ' + escapeHtml(r.tahun || '-') + ' · No ' + escapeHtml(r.no) + '</span></div>' +
+        '<span class="badge ' + statusToBadge(r.status) + '">' + escapeHtml(r.status || 'Belum Ada') + '</span></div>';
+    }).join('') + '</div>';
+  document.getElementById('modal').hidden = false;
+}
+
+/* Cursor tangan saat hover elemen chart yang bisa diklik untuk detail. */
+function hoverPointer(evt, elements) {
+  evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+}
+
+/** onClick untuk chart 1 dataset (donut/pie/bar biasa): klik segmen/batang -> daftar perusahaan
+ * yang keyFn(row) sama dengan label kategori itu. rows = data sumber yang dipakai chart ini (biasanya d/STATE.filtered). */
+function clickOpenGroup(rows, keyFn, titlePrefix) {
+  return function (evt, elements, chart) {
+    if (!elements.length) return;
+    var label = chart.data.labels[elements[0].index];
+    var matched = rows.filter(function (r) { return keyFn(r) === label; });
+    openCategoryModal(titlePrefix + ' — ' + label, matched);
+  };
+}
+
+/** onClick untuk bar chart bertumpuk 2 dataset (mis. SLA Memenuhi/Tidak per tahun): klik satu segmen
+ * -> daftar perusahaan yang cocok kategori sumbu X DAN dataset yang diklik. */
+function clickOpenGroupStacked(rows, catKeyFn, seriesKeyFn, titlePrefix) {
+  return function (evt, elements, chart) {
+    if (!elements.length) return;
+    var el = elements[0];
+    var cat = chart.data.labels[el.index];
+    var seriesLabel = chart.data.datasets[el.datasetIndex].label;
+    var matched = rows.filter(function (r) { return catKeyFn(r) === cat && seriesKeyFn(r) === seriesLabel; });
+    openCategoryModal(titlePrefix + ' — ' + cat + ' · ' + seriesLabel, matched);
+  };
+}
+
+/* Label dataset SLA persis sama dengan dataset chSlaTahun/chSlaSpm ('Memenuhi' / 'Tidak Memenuhi'). */
+function slaLabel(r) {
+  return r.sla === 'Memenuhi' ? 'Memenuhi' : r.sla === 'Tidak memenuhi' ? 'Tidak Memenuhi' : null;
+}
+
+function openKlienModal(no) {
+  var r = STATE.rows.find(function (x) { return x.no === no; });
+  if (!r) return;
+  document.getElementById('modalTitle').textContent = r.namaPerusahaan;
+  document.getElementById('modalSub').textContent = (r.produk || '-') + ' • ' + (r.komoditi || '-');
+
+  var timeline = [
+    ['Permohonan SIINas', r.tglSiinas], ['Masuk LSPro', r.tglMasukLspro], ['SPK', r.tglSpk],
+    ['Penugasan Tim', r.tglPenugasanTim], ['Mulai Audit Kecukupan', r.tglMulaiKecukupan],
+    ['Selesai Audit Kecukupan', r.tglSelesaiKecukupan], ['Mulai Audit Kesesuaian', r.tglMulaiKesesuaian],
+    ['Selesai Audit Kesesuaian', r.tglSelesaiKesesuaian], ['Mulai Pengujian 1', r.tglMulaiUji1],
+    ['Selesai Pengujian 1', r.tglSelesaiUji1], ['Penilaian', r.tglPenilaian], ['Keputusan', r.tglKeputusan],
+    ['Upload Draft Sertifikat', r.tglUploadDraf], ['Terbit Sertifikat', r.tglTerbitSertifikat]
+  ].filter(function (t) { return t[1]; });
+
+  var timelineHtml = timeline.map(function (t) {
+    return '<div class="detail-item"><label>' + t[0] + '</label><span>' + escapeHtml(t[1]) + '</span></div>';
+  }).join('');
+
+  var backHtml = (MODAL_BACK && MODAL_BACK.rows.some(function (x) { return x.no === no; }))
+    ? '<button type="button" class="modal-back" id="modalBackBtn">‹ Kembali ke ' + escapeHtml(MODAL_BACK.label) + '</button>'
+    : '';
+
+  document.getElementById('modalBody').innerHTML = backHtml +
+    '<div class="modal-section-title">Informasi Umum</div>' +
+    '<div class="detail-grid">' +
+    detailItem('ID Pelanggan', r.idPelanggan) + detailItem('Jenis Perusahaan', r.jenisPerusahaan) +
+    detailItem('Provinsi', r.provinsi) + detailItem('Kab/Kota', r.kabKota) +
+    detailItem('Kab/Kota Pabrik (peta)', r.pabrikKota || '-') + detailItem('Alamat Pabrik', r.alamatPabrik) +
+    detailItem('Jenis Permohonan', r.jenisPermohonan) + detailItem('Jenis Audit', r.jenisAudit) +
+    detailItem('Merk', r.merk) + detailItem('Wajib/Sukarela', r.wajibSukarela) +
+    detailItem('Lead Auditor', r.leadAuditor) + detailItem('Auditor', [r.auditor1, r.auditor2].filter(Boolean).join(', ')) +
+    detailItem('Status', r.status) + detailItem('SLA', r.sla) +
+    detailItem('No. Sertifikat/SK', r.noSertifikat) + detailItem('Lama Proses (LSPro → Terbit)', lamaLsproKeTerbit(r) !== null ? lamaLsproKeTerbit(r) + ' hari' : '-') +
+    '</div>' +
+    '<div class="modal-section-title">Linimasa Proses</div>' +
+    '<div class="detail-grid">' + (timelineHtml || '<span style="color:var(--txt-mute)">Belum ada data tanggal.</span>') + '</div>';
+
+  document.getElementById('modal').hidden = false;
+}
+
+function detailItem(label, value) {
+  return '<div class="detail-item"><label>' + label + '</label><span>' + escapeHtml(value || '-') + '</span></div>';
+}
+
+/* ================== PAGE 3: JADWAL ================== */
+var jadwalFilterState = { search: '', tahapan: '' };
+
+function renderJadwal() {
+  var d = STATE.filtered.filter(isActive);
+  var withStage = d.map(function (r) { return Object.assign({}, r, { stage: currentStage(r) }); });
+
+  document.getElementById('kpiJadwalAktif').textContent = d.length;
+
+  var today = startOfDay(new Date());
+  // Sama dengan kriteria tabel Peringatan Kasus Kritis di Ringkasan, hanya yang sisa harinya sudah negatif
+  var lewatBatas = kasusKritis(STATE.filtered).filter(function (r) { return r.sisa < 0; });
+  document.getElementById('kpiLewatBatas').textContent = lewatBatas.length;
+
+  var thisMonth = today.getMonth(), thisYear = today.getFullYear();
+  var auditBulanIni = STATE.filtered.filter(function (r) {
+    var dt = toDate(r.tglMulaiKesesuaian);
+    return dt && dt.getMonth() === thisMonth && dt.getFullYear() === thisYear;
+  });
+  document.getElementById('kpiAuditBulanIni').textContent = auditBulanIni.length;
+
+  var stageKeyFn = function (r) { return r.stage; };
+  var byStage = countBy(withStage, stageKeyFn);
+  var stageLabels = TAHAPAN_ORDER.filter(function (s) { return byStage[s]; });
+  destroyChart('chTahapan');
+  STATE.charts.chTahapan = new Chart(document.getElementById('chTahapan'), {
+    type: 'bar',
+    data: { labels: stageLabels, datasets: [{ label: 'Kasus', data: stageLabels.map(function (s) { return byStage[s]; }), backgroundColor: '#f59e0b', borderRadius: 8, maxBarThickness: 34 }] },
+    options: baseOpts({ indexAxis: 'y', scales: axisScales(), plugins: { legend: { display: false } }, onClick: clickOpenGroup(withStage, stageKeyFn, 'Tahapan Proses'), onHover: hoverPointer })
+  });
+
+  var jenisDinasKeyFn = function (r) { return r.jenisDinas || 'Tidak diketahui'; };
+  var byDinas = countBy(STATE.filtered, jenisDinasKeyFn);
+  destroyChart('chJenisDinas');
+  STATE.charts.chJenisDinas = new Chart(document.getElementById('chJenisDinas'), {
+    type: 'doughnut',
+    data: { labels: Object.keys(byDinas), datasets: [{ data: Object.values(byDinas), backgroundColor: PALETTE, borderColor: CHART_DEFAULTS.borderColor, borderWidth: 3 }] },
+    options: baseOpts({ cutout: '62%', onClick: clickOpenGroup(STATE.filtered, jenisDinasKeyFn, 'Jenis Dinas'), onHover: hoverPointer })
+  });
+
+  // Filter dropdown tahapan
+  var tahapSel = document.getElementById('filterTahapan');
+  if (tahapSel.options.length <= 1) {
+    TAHAPAN_ORDER.forEach(function (s) {
+      var o = document.createElement('option'); o.value = s; o.textContent = s; tahapSel.appendChild(o);
+    });
+    document.getElementById('searchJadwal').addEventListener('input', function (e) { jadwalFilterState.search = e.target.value.toLowerCase(); drawJadwalTable(); });
+    tahapSel.addEventListener('change', function (e) { jadwalFilterState.tahapan = e.target.value; drawJadwalTable(); });
+  }
+  drawJadwalTable();
+
+  renderReminderAudit();
+  renderSurvailen();
+}
+
+/* ---- Reminder audit kesesuaian: warna dan pesan mengikuti jarak hari ---- */
+var REMINDER_BATAS = { merah: 30, oranye: 60 };   // <= 30 hari merah, 31-60 oranye, lebih dari 60 hijau
+var STATUS_BATAL = ['Dihentikan', 'Dibekukan'];
+
+function reminderTier(sisa) {
+  if (sisa <= REMINDER_BATAS.merah) return { key: 'red', label: 'Segera' };
+  if (sisa <= REMINDER_BATAS.oranye) return { key: 'orange', label: 'Waspada' };
+  return { key: 'green', label: 'Persiapan' };
+}
+
+function reminderHari(sisa) {
+  return sisa === 0 ? 'HARI INI' : 'H-' + sisa;
+}
+
+/* Pesan kesadaran (awareness) per tingkat, ditambah peringatan tim dan logistik sesuai Jenis Dinas */
+function reminderPesan(r, sisa, tier) {
+  var belumTim = !r.leadAuditor && !r.auditor1 && !r.auditor2;
+  var logistik = r.jenisDinas === 'Luar Kota Udara' ? ' Pesan tiket pesawat dan akomodasi.'
+    : r.jenisDinas === 'Luar Kota Darat' ? ' Atur transportasi darat dan akomodasi.' : '';
+  var isi, label = tier.label;
+  if (sisa === 0) { label = 'Hari ini'; isi = 'audit dimulai. Pastikan tim sudah berada di lokasi.'; }
+  else if (tier.key === 'red') isi = 'finalisasi tim, surat tugas, dan logistik.' + logistik;
+  else if (tier.key === 'orange') isi = 'pastikan tim dan dokumen siap, mulai atur logistik dinas.' + logistik;
+  else isi = 'konfirmasi jadwal dengan klien dan rencanakan tim.';
+  var peringatan = (belumTim && tier.key !== 'green') ? '<b class="rm-warn">Tim belum ditugaskan.</b> ' : '';
+  // Awal kalimat huruf besar hanya jika didahului peringatan
+  if (peringatan) isi = isi.charAt(0).toUpperCase() + isi.slice(1);
+  return '<b>' + label + ':</b> ' + peringatan + escapeHtml(isi);
+}
+
+/* Reminder memakai semua data (bukan STATE.filtered), supaya tidak hilang saat filter Tahun/Bulan dipakai. */
+function renderReminderAudit() {
+  var todayStart = startOfDay(new Date());
+  var upcoming = STATE.rows
+    .filter(function (r) { return STATUS_BATAL.indexOf(r.status) === -1; })
+    .map(function (r) { return Object.assign({}, r, { dt: toDate(r.tglMulaiKesesuaian) }); })
+    .filter(function (r) { return r.dt && r.dt >= todayStart; })
+    .map(function (r) { var s = daysBetween(todayStart, r.dt); return Object.assign(r, { sisa: s, tier: reminderTier(s) }); })
+    .sort(function (a, b) { return a.dt - b.dt; });
+
+  var jml = { red: 0, orange: 0, green: 0 };
+  upcoming.forEach(function (r) { jml[r.tier.key]++; });
+
+  var chip = function (key, teks, n) {
+    return '<span class="rm-chip tier-' + key + '"><i></i>' + teks + ' <b>' + n + '</b></span>';
+  };
+  var banner = '';
+  if (jml.red) {
+    var tanpaTim = upcoming.filter(function (r) { return r.tier.key === 'red' && !r.leadAuditor && !r.auditor1 && !r.auditor2; }).length;
+    banner = '<div class="rm-alert tier-red"><b>Perhatian:</b> ' + jml.red + ' audit dimulai dalam ' + REMINDER_BATAS.merah + ' hari. ' +
+      'Pastikan tim, surat tugas, dan logistik sudah siap.' + (tanpaTim ? ' <b class="rm-warn">' + tanpaTim + ' di antaranya belum ada tim.</b>' : '') + '</div>';
+  } else if (jml.orange) {
+    banner = '<div class="rm-alert tier-orange"><b>Waspada:</b> ' + jml.orange + ' audit dimulai dalam ' + (REMINDER_BATAS.merah + 1) + '–' + REMINDER_BATAS.oranye +
+      ' hari. Mulai siapkan tim dan logistik.</div>';
+  } else if (jml.green) {
+    banner = '<div class="rm-alert tier-green">Belum ada audit dalam ' + REMINDER_BATAS.oranye + ' hari ke depan. Jadwal yang ada masih dalam tahap persiapan awal.</div>';
+  }
+  document.getElementById('reminderSummary').innerHTML =
+    '<div class="rm-legend">' +
+      chip('green', 'Hijau · lebih dari ' + REMINDER_BATAS.oranye + ' hari', jml.green) +
+      chip('orange', 'Oranye · ' + (REMINDER_BATAS.merah + 1) + '–' + REMINDER_BATAS.oranye + ' hari', jml.orange) +
+      chip('red', 'Merah · ' + REMINDER_BATAS.merah + ' hari atau kurang', jml.red) +
+      '<span class="rm-note">Tidak terpengaruh filter Tahun dan Bulan</span>' +
+    '</div>' + banner;
+
+  var MAKS = 10;
+  document.getElementById('timelineAudit').innerHTML = upcoming.length ? upcoming.slice(0, MAKS).map(function (r) {
+    var tim = [
+      r.leadAuditor ? 'Lead: ' + r.leadAuditor : '',
+      (r.auditor1 || r.auditor2) ? 'Auditor: ' + [r.auditor1, r.auditor2].filter(Boolean).join(', ') : '',
+      r.ppc ? 'PPC: ' + r.ppc : '',
+      r.ppcResampling ? 'PPC Re-Sampling: ' + r.ppcResampling : '',
+      r.jenisDinas ? r.jenisDinas : ''
+    ].filter(Boolean);
+    var timHtml = (r.leadAuditor || r.auditor1 || r.auditor2 || r.ppc)
+      ? tim.map(function (t) { return '<span class="tl-team-item">' + escapeHtml(t) + '</span>'; }).join('')
+      : '<span class="tl-team-item tl-team-empty">Tim belum ditugaskan</span>' +
+        (r.jenisDinas ? '<span class="tl-team-item">' + escapeHtml(r.jenisDinas) + '</span>' : '');
+    return '<div class="tl-item tier-' + r.tier.key + '">' +
+      '<div class="tl-date"><span class="tl-h">' + reminderHari(r.sisa) + '</span><span class="tl-dt">' + escapeHtml(r.tglMulaiKesesuaian) + '</span></div>' +
+      '<div class="tl-line"><div class="tl-dot"></div></div>' +
+      '<div class="tl-body">' +
+        '<div class="tl-head"><strong>' + escapeHtml(r.namaPerusahaan) + '</strong>' +
+        '<span class="badge ' + statusToBadge(r.status) + '" title="Status di LK">' + escapeHtml(r.status || 'Status belum diisi') + '</span></div>' +
+        '<span class="tl-produk">' + escapeHtml(r.komoditi || r.produk || '-') + '</span>' +
+        '<div class="tl-team">' + timHtml + '</div>' +
+        '<div class="tl-note note-' + r.tier.key + '">' + reminderPesan(r, r.sisa, r.tier) + '</div>' +
+      '</div></div>';
+  }).join('') + (upcoming.length > MAKS ? '<p class="tl-more">+' + (upcoming.length - MAKS) + ' audit lainnya yang lebih jauh jadwalnya.</p>' : '')
+    : '<p style="color:var(--txt-mute);font-size:13px">Tidak ada jadwal audit kesesuaian mendatang.</p>';
+}
+
+function drawJadwalTable() {
+  var d = STATE.filtered.filter(isActive).map(function (r) { return Object.assign({}, r, { stage: currentStage(r) }); })
+    .filter(function (r) {
+      var matchSearch = !jadwalFilterState.search || r.namaPerusahaan.toLowerCase().indexOf(jadwalFilterState.search) !== -1;
+      var matchStage = !jadwalFilterState.tahapan || r.stage === jadwalFilterState.tahapan;
+      return matchSearch && matchStage;
+    });
+
+  document.getElementById('jadwalCount').textContent = d.length + ' data';
+  document.getElementById('tblJadwal').innerHTML = d.length ? d.map(function (r) {
+    var idx = TAHAPAN_ORDER.indexOf(r.stage);
+    var pct = Math.round(((idx + 1) / TAHAPAN_ORDER.length) * 100);
+    return '<tr><td>' + escapeHtml(r.no) + '</td><td>' + escapeHtml(r.namaPerusahaan) + '</td><td><span class="badge b-amber">' + escapeHtml(r.stage) + '</span></td>' +
+      '<td>' + escapeHtml(r.tglSpk || '-') + '</td><td>' + escapeHtml(r.tglMulaiKesesuaian || '-') + '</td><td>' + escapeHtml(r.leadAuditor || '-') + '</td>' +
+      '<td><div class="prog"><span style="width:' + pct + '%"></span></div></td></tr>';
+  }).join('') : '<tr><td colspan="7" class="tbl-empty">Tidak ada kasus aktif yang cocok</td></tr>';
+}
+
+/* ================== PAGE 4: SLA ================== */
+function renderSla() {
+  var d = STATE.filtered;
+  var slaOk = d.filter(function (r) { return r.sla === 'Memenuhi'; });
+  var slaNo = d.filter(function (r) { return r.sla === 'Tidak memenuhi'; });
+  var slaTotal = slaOk.length + slaNo.length;
+
+  document.getElementById('kpiSlaOk').textContent = slaOk.length;
+  document.getElementById('kpiSlaOkFoot').textContent = slaTotal ? Math.round((slaOk.length / slaTotal) * 100) + '% dari dievaluasi' : '-';
+  document.getElementById('kpiSlaNo').textContent = slaNo.length;
+  document.getElementById('kpiSlaNoFoot').textContent = slaTotal ? Math.round((slaNo.length / slaTotal) * 100) + '% dari dievaluasi' : '-';
+  // Total proses = Masuk LSPro sampai Terbit Sertifikat (kolom Total Lama Proses di Sheet hanya terisi untuk sedikit kasus)
+  var totals = validNums(d.map(lamaLsproKeTerbit));
+  var drafts = validNums(d.map(function (r) { return r.lamaLsproKeDraftHk; }));
+  document.getElementById('kpiAvgTotal').textContent = totals.length ? Math.round(avg(totals)) : '-';
+  document.getElementById('kpiAvgTotalFoot').textContent = 'hari kalender, dari ' + totals.length + ' kasus';
+  document.getElementById('kpiAvgDraft').textContent = drafts.length ? Math.round(avg(drafts)) : '-';
+  document.getElementById('kpiAvgDraftFoot').textContent = 'hari kerja, dari ' + drafts.length + ' kasus';
+
+  // SLA per tahun
+  var years = uniq(d.map(function (r) { return r.tahun; }).filter(Boolean)).sort();
+  var okByYear = years.map(function (y) { return d.filter(function (r) { return r.tahun === y && r.sla === 'Memenuhi'; }).length; });
+  var noByYear = years.map(function (y) { return d.filter(function (r) { return r.tahun === y && r.sla === 'Tidak memenuhi'; }).length; });
+  destroyChart('chSlaTahun');
+  STATE.charts.chSlaTahun = new Chart(document.getElementById('chSlaTahun'), {
+    type: 'bar',
+    data: { labels: years, datasets: [
+      { label: 'Memenuhi', data: okByYear, backgroundColor: '#22c55e', borderRadius: 6, maxBarThickness: 34, stack: 's' },
+      { label: 'Tidak Memenuhi', data: noByYear, backgroundColor: '#ef4444', borderRadius: 6, maxBarThickness: 34, stack: 's' }
+    ]},
+    options: baseOpts({ scales: axisScales(), onClick: clickOpenGroupStacked(d, function (r) { return r.tahun; }, slaLabel, 'SLA Tahun'), onHover: hoverPointer })
+  });
+
+  // SLA per SPM
+  var spms = uniq(d.map(function (r) { return r.spm; }).filter(Boolean));
+  var okBySpm = spms.map(function (s) { return d.filter(function (r) { return r.spm === s && r.sla === 'Memenuhi'; }).length; });
+  var noBySpm = spms.map(function (s) { return d.filter(function (r) { return r.spm === s && r.sla === 'Tidak memenuhi'; }).length; });
+  destroyChart('chSlaSpm');
+  STATE.charts.chSlaSpm = new Chart(document.getElementById('chSlaSpm'), {
+    type: 'bar',
+    data: { labels: spms, datasets: [
+      { label: 'Memenuhi', data: okBySpm, backgroundColor: '#22c55e', borderRadius: 6, maxBarThickness: 46 },
+      { label: 'Tidak Memenuhi', data: noBySpm, backgroundColor: '#ef4444', borderRadius: 6, maxBarThickness: 46 }
+    ]},
+    options: baseOpts({ scales: axisScales(), onClick: clickOpenGroupStacked(d, function (r) { return r.spm; }, slaLabel, 'SLA per SPM'), onHover: hoverPointer })
+  });
+
+  // Bottleneck rata-rata per tahap. Hanya nilai valid (>= 0) yang dihitung, n = jumlah kasus yang mendasari.
+  var stageDefs = [
+    ['SIINAS → LSPro (hari)', 'lamaSiinasKeLspro'],
+    ['LSPro → Draft (HK)', 'lamaLsproKeDraftHk'],
+    ['Perbaikan Dokumen (HK)', 'lamaPerbaikanDokumenHk'],
+    ['TTD PKS + Bayar (HK)', 'lamaPksBayarHk'],
+    ['Tutup Temuan (HK)', 'lamaTutupTemuanHk'],
+    ['Penjadwalan Ulang (HK)', 'lamaPenjadwalanUlang'],
+    ['Audit Kesesuaian (hari)', 'lamaAuditKesesuaian'],
+    ['Penerbitan (hari)', 'lamaPenerbitan']
+  ];
+  var ignored = 0;
+  var stageAvgs = stageDefs.map(function (s) {
+    var raw = d.map(function (r) { return r[s[1]]; }).filter(function (n) { return n !== null && n !== undefined && !isNaN(n); });
+    var vals = validNums(raw);
+    ignored += raw.length - vals.length;
+    return [s[0] + ' (n=' + vals.length + ')', avg(vals)];
+  });
+  destroyChart('chBottleneck');
+  STATE.charts.chBottleneck = new Chart(document.getElementById('chBottleneck'), {
+    type: 'bar',
+    data: { labels: stageAvgs.map(function (s) { return s[0]; }), datasets: [{ label: 'Rata-rata', data: stageAvgs.map(function (s) { return Math.round(s[1] * 10) / 10; }), backgroundColor: '#22d3ee', borderRadius: 8, maxBarThickness: 30 }] },
+    options: baseOpts({ indexAxis: 'y', scales: axisScales(), plugins: { legend: { display: false } } })
+  });
+  document.getElementById('bottleneckNote').textContent = ignored
+    ? ignored + ' nilai negatif (tanggal tidak berurutan di Sheet) tidak ikut dihitung.'
+    : '';
+
+  // Breakdown per tahap: Memenuhi vs Tidak Memenuhi SLA. Kategori (Klien/BSPJI/Campuran) adalah
+  // DUGAAN dari nama tahapnya (Sheet tidak mencatat penyebab keterlambatan secara eksplisit) —
+  // lihat catatan di bawah chart. "LSPro → Draft" sengaja tidak diikutkan karena itu angka TOTAL
+  // yang dibandingkan ke SPM, bukan salah satu tahap yang bisa dijumlah dari tahap-tahap lain.
+  var stageOwner = [
+    ['SIINAS → LSPro (hari)', 'lamaSiinasKeLspro', 'Campuran'],
+    ['Perbaikan Dokumen (HK)', 'lamaPerbaikanDokumenHk', 'Sisi Klien'],
+    ['TTD PKS + Bayar (HK)', 'lamaPksBayarHk', 'Sisi Klien'],
+    ['Tutup Temuan (HK)', 'lamaTutupTemuanHk', 'Campuran'],
+    ['Penjadwalan Ulang (HK)', 'lamaPenjadwalanUlang', 'Campuran'],
+    ['Audit Kesesuaian (hari)', 'lamaAuditKesesuaian', 'Sisi BSPJI'],
+    ['Penerbitan (hari)', 'lamaPenerbitan', 'Sisi BSPJI']
+  ];
+  var slaGroups = [
+    { key: 'Memenuhi', color: '#22c55e' },
+    { key: 'Tidak memenuhi', color: '#ef4444' }
+  ];
+  var stageN = {}; // "stageIndex|groupKey" -> n, dipakai tooltip footer
+  var stageSeries = slaGroups.map(function (grp) {
+    var rows = d.filter(function (r) { return r.sla === grp.key; });
+    var data = stageOwner.map(function (s, i) {
+      var vals = validNums(rows.map(function (r) { return r[s[1]]; }).filter(function (n) { return n !== null && n !== undefined && !isNaN(n); }));
+      stageN[i + '|' + grp.key] = vals.length;
+      return vals.length ? Math.round(avg(vals) * 10) / 10 : 0;
+    });
+    return { label: grp.key === 'Memenuhi' ? 'Memenuhi' : 'Tidak Memenuhi', data: data, backgroundColor: grp.color, borderRadius: 6, maxBarThickness: 18 };
+  });
+  destroyChart('chBottleneckSla');
+  STATE.charts.chBottleneckSla = new Chart(document.getElementById('chBottleneckSla'), {
+    type: 'bar',
+    data: { labels: stageOwner.map(function (s) { return s[0] + ' · ' + s[2]; }), datasets: stageSeries },
+    options: baseOpts({
+      indexAxis: 'y', scales: axisScales('Rata-rata hari'),
+      plugins: {
+        tooltip: {
+          callbacks: {
+            footer: function (items) {
+              var i = items[0].dataIndex;
+              var grp = items[0].dataset.label === 'Memenuhi' ? 'Memenuhi' : 'Tidak memenuhi';
+              return 'n=' + (stageN[i + '|' + grp] || 0) + ' kasus';
+            }
+          }
+        }
+      }
+    })
+  });
+
+  // Top 10 kasus terlama (Masuk LSPro sampai Terbit)
+  var terlama = d.map(function (r) { return { r: r, hari: lamaLsproKeTerbit(r) }; })
+    .filter(function (x) { return x.hari !== null; })
+    .sort(function (a, b) { return b.hari - a.hari; })
+    .slice(0, 10);
+  document.getElementById('tblTerlama').innerHTML = terlama.length ? terlama.map(function (x) {
+    var r = x.r;
+    var slaBadge = r.sla === 'Memenuhi' ? 'b-green' : r.sla === 'Tidak memenuhi' ? 'b-red' : 'b-gray';
+    return '<tr><td>' + escapeHtml(r.no) + '</td><td>' + escapeHtml(r.namaPerusahaan) + '</td><td>' + escapeHtml(r.komoditi || '-') + '</td>' +
+      '<td>' + escapeHtml(r.spm || '-') + '</td><td><strong style="color:var(--txt)">' + x.hari + '</strong></td>' +
+      '<td><span class="badge ' + slaBadge + '">' + escapeHtml(r.sla || 'Belum ada') + '</span></td></tr>';
+  }).join('') : '<tr><td colspan="6" class="tbl-empty">Data lama proses belum tersedia</td></tr>';
+}
+
+/* ================== PAGE 5: KOMODITAS ================== */
+function renderKomoditas() {
+  var d = STATE.filtered;
+  var byKomoditi = countBy(d, function (r) { return r.komoditi; });
+  delete byKomoditi['(Kosong)'];
+  document.getElementById('kpiKomoditiCount').textContent = Object.keys(byKomoditi).length;
+
+  var byProvinsi = countBy(d, function (r) { return r.provinsi; });
+  delete byProvinsi['(Kosong)'];
+  document.getElementById('kpiProvinsiCount').textContent = Object.keys(byProvinsi).length;
+
+  var wajib = d.filter(function (r) { return r.wajibSukarela === 'Wajib'; }).length;
+  var sukarela = d.filter(function (r) { return r.wajibSukarela === 'Sukarela'; }).length;
+  var wsTotal = wajib + sukarela;
+  var wajibPct = wsTotal ? Math.round((wajib / wsTotal) * 100) : 0;
+  var wsKosong = d.length - wsTotal;
+  document.getElementById('kpiWajib').textContent = wsTotal ? wajibPct + '%' : '0%';
+  document.getElementById('kpiWajibFoot').textContent = wajib + ' Wajib, ' + sukarela + ' Sukarela';
+
+  var komoditiSorted = Object.keys(byKomoditi).sort(function (a, b) { return byKomoditi[b] - byKomoditi[a]; });
+  destroyChart('chKomoditi');
+  STATE.charts.chKomoditi = new Chart(document.getElementById('chKomoditi'), {
+    type: 'bar',
+    data: { labels: komoditiSorted, datasets: [{ label: 'Jumlah Permohonan', data: komoditiSorted.map(function (k) { return byKomoditi[k]; }), backgroundColor: '#14b8a6', borderRadius: 8, maxBarThickness: 30 }] },
+    options: baseOpts({
+      indexAxis: 'y', scales: axisScales('Jumlah Permohonan'), plugins: { legend: { display: false },
+      tooltip: { callbacks: { footer: uniqCompanyFooter(d, 'komoditi') } } },
+      onClick: clickOpenGroup(d, function (r) { return r.komoditi; }, 'Komoditi'), onHover: hoverPointer
+    })
+  });
+
+  destroyChart('chWajib');
+  STATE.charts.chWajib = new Chart(document.getElementById('chWajib'), {
+    type: 'doughnut',
+    data: { labels: ['Wajib', 'Sukarela'], datasets: [{ data: [wajib, sukarela], backgroundColor: ['#3b82f6', '#f59e0b'], borderColor: CHART_DEFAULTS.borderColor, borderWidth: 3 }] },
+    options: baseOpts({
+      cutout: '65%',
+      onClick: clickOpenGroup(d, function (r) { return r.wajibSukarela; }, 'Wajib/Sukarela'), onHover: hoverPointer,
+      plugins: {
+        legend: {
+          labels: {
+            color: CHART_DEFAULTS.color, font: { size: 11.5 }, boxWidth: 12, padding: 14,
+            generateLabels: function (chart) {
+              return chart.data.labels.map(function (label, i) {
+                var val = chart.data.datasets[0].data[i];
+                var pct = wsTotal ? Math.round((val / wsTotal) * 100) : 0;
+                return { text: label + ' — ' + pct + '% (' + val + ')', fillStyle: chart.data.datasets[0].backgroundColor[i], strokeStyle: chart.data.datasets[0].borderColor, index: i };
+              });
+            }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function (item) {
+              var pct = wsTotal ? Math.round((item.raw / wsTotal) * 100) : 0;
+              return item.label + ': ' + pct + '% (' + item.raw + ' permohonan)';
+            }
+          }
+        }
+      }
+    })
+  });
+  document.getElementById('chWajibNote').textContent = wsKosong
+    ? wsKosong + ' permohonan belum diisi kolom Wajib/Sukarela, tidak dihitung di persentase ini.'
+    : '';
+
+  var provinsiSorted = Object.keys(byProvinsi).sort(function (a, b) { return byProvinsi[b] - byProvinsi[a]; });
+  destroyChart('chProvinsi');
+  STATE.charts.chProvinsi = new Chart(document.getElementById('chProvinsi'), {
+    type: 'bar',
+    data: { labels: provinsiSorted, datasets: [{ label: 'Jumlah Permohonan', data: provinsiSorted.map(function (p) { return byProvinsi[p]; }), backgroundColor: '#3b82f6', borderRadius: 8, maxBarThickness: 30 }] },
+    options: baseOpts({
+      indexAxis: 'y', scales: axisScales('Jumlah Permohonan'), plugins: { legend: { display: false },
+      tooltip: { callbacks: { footer: uniqCompanyFooter(d, 'provinsi') } } },
+      onClick: clickOpenGroup(d, function (r) { return r.provinsi; }, 'Provinsi'), onHover: hoverPointer
+    })
+  });
+
+  var byKabKota = countBy(d, function (r) { return r.kabKota; });
+  delete byKabKota['(Kosong)'];
+  var kabAll = Object.keys(byKabKota).sort(function (a, b) { return byKabKota[b] - byKabKota[a]; });
+  var kabSorted = kabAll.slice(0, 10);
+  destroyChart('chKabKota');
+  STATE.charts.chKabKota = new Chart(document.getElementById('chKabKota'), {
+    type: 'bar',
+    data: { labels: kabSorted, datasets: [{ label: 'Jumlah Permohonan', data: kabSorted.map(function (k) { return byKabKota[k]; }), backgroundColor: '#a855f7', borderRadius: 8, maxBarThickness: 30 }] },
+    options: baseOpts({
+      indexAxis: 'y', scales: axisScales('Jumlah Permohonan'), plugins: { legend: { display: false },
+      tooltip: { callbacks: { footer: uniqCompanyFooter(d, 'kabKota') } } },
+      onClick: clickOpenGroup(d, function (r) { return r.kabKota; }, 'Kab/Kota'), onHover: hoverPointer
+    })
+  });
+  document.getElementById('chKabKotaNote').textContent = kabAll.length > 10
+    ? 'Menampilkan 10 kab/kota teratas dari total ' + kabAll.length + '.' : '';
+
+  // Matriks komoditi x provinsi
+  var provList = provinsiSorted.slice(0, 8);
+  var komList = komoditiSorted.slice(0, 10);
+  document.getElementById('matriksNote').textContent =
+    'Angka = jumlah permohonan (bukan jumlah perusahaan unik). Menampilkan ' + provList.length + ' dari ' + provinsiSorted.length + ' provinsi dan ' +
+    komList.length + ' dari ' + komoditiSorted.length + ' komoditi teratas.';
+  var head = '<tr><th>Komoditi \\ Provinsi</th>' + provList.map(function (p) { return '<th>' + escapeHtml(p) + '</th>'; }).join('') + '</tr>';
+  var body = komList.map(function (k) {
+    var cells = provList.map(function (p) {
+      var count = d.filter(function (r) { return r.komoditi === k && r.provinsi === p; }).length;
+      return '<td>' + (count ? '<span class="badge b-blue">' + count + '</span>' : '<span style="color:var(--txt-mute)">-</span>') + '</td>';
+    }).join('');
+    return '<tr><td style="color:var(--txt);font-weight:550">' + escapeHtml(k) + '</td>' + cells + '</tr>';
+  }).join('');
+  document.getElementById('matriksHead').innerHTML = head;
+  document.getElementById('matriksBody').innerHTML = body;
+}
+
+/* ================== PAGE 6: PETA ================== */
+var MAP = { map: null, layer: null, groups: [], sig: '', dinas: '', mode: 'permohonan', bound: false };
+/* metricOf: angka utama yang dipakai untuk ukuran bubble, urutan daftar, dan KPI — ikut mode
+ * yang dipilih user (jumlah permohonan/baris LK, atau jumlah perusahaan unik di wilayah itu). */
+function metricOf(g) { return MAP.mode === 'perusahaan' ? g.uniqNames.length : g.rows.length; }
+var MAP_BLUE = '#3b82f6';
+var DINAS_COLOR = { 'Luar Kota Darat': '#14b8a6', 'Luar Kota Udara': '#a855f7', 'Dalam Kota': '#f59e0b', 'Luar Negeri': '#ef4444' };
+/* Tile OpenStreetMap (tanpa API key). Mode gelap dibuat dengan filter CSS .map-dark di Styles.html. */
+var TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+function petaActive() { return document.getElementById('page-peta').classList.contains('active'); }
+
+function mapTheme() { return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
+
+/* Peta hanya digambar saat halamannya tampil (Leaflet butuh container yang terlihat). */
+function onPetaShown() {
+  setTimeout(function () {
+    if (MAP.map) MAP.map.invalidateSize();
+    MAP.sig = '';
+    renderPeta();
+  }, 60);
+}
+
+function ensureMap() {
+  if (MAP.map) return;
+  MAP.map = L.map('petaMap', { scrollWheelZoom: false }).setView([0.5, 102], 6);
+  L.tileLayer(TILE_URL, {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(MAP.map);
+  MAP.layer = L.layerGroup().addTo(MAP.map);
+  // Scroll roda mouse hanya memperbesar peta setelah peta diklik, supaya halaman tetap bisa di-scroll.
+  MAP.map.on('click', function () { MAP.map.scrollWheelZoom.enable(); });
+  MAP.map.on('mouseout', function () { MAP.map.scrollWheelZoom.disable(); });
+}
+
+function petaPopupHtml(g) {
+  var permRow = '<div class="mp-row' + (MAP.mode === 'permohonan' ? ' mp-row-active' : '') + '"><span>Total permohonan</span><b>' + g.rows.length + '</b></div>';
+  var klienRow = '<div class="mp-row' + (MAP.mode === 'perusahaan' ? ' mp-row-active' : '') + '"><span>Klien unik</span><b>' + g.uniqNames.length + '</b></div>';
+  var html = '<span class="mp-title">' + escapeHtml(g.label) + '</span>' +
+    '<span class="mp-sub">' + escapeHtml(g.provinsi || '') + '</span>' +
+    permRow + klienRow;
+  Object.keys(g.dinas).sort(function (a, b) { return g.dinas[b] - g.dinas[a]; }).forEach(function (k) {
+    html += '<div class="mp-row"><span>' + escapeHtml(k) + '</span><b>' + g.dinas[k] + '</b></div>';
+  });
+  // Nama klien dirapatkan (unik) supaya kelihatan berapa klien bersih di wilayah ini, bukan
+  // jumlah baris permohonan (satu klien bisa punya beberapa permohonan/sertifikat berbeda).
+  html += '<div class="mp-list">' + g.uniqNames.slice(0, 6).map(function (n) {
+    return '<div class="mp-name" data-name="' + escapeHtml(n) + '" title="Klik untuk lihat semua permohonan">' + escapeHtml(n) + '</div>';
+  }).join('') + (g.uniqNames.length > 6 ? '<div class="mp-more">+' + (g.uniqNames.length - 6) + ' lainnya</div>' : '') + '</div>';
+  if (g.loc.level === 'provinsi') html += '<div class="mp-approx">Garis putus-putus = posisi perkiraan (pusat provinsi), alamat pabrik belum dikenali.</div>';
+  else if (g.loc.level === 'kabkota') html += '<div class="mp-approx">Sebagian alamat pabrik di sini belum sempat di-geocode; posisi sementara memakai kolom Kab/Kota.</div>';
+  return html;
+}
+
+function renderPeta() {
+  var d = STATE.filtered;
+
+  // Dropdown Jenis Dinas: diisi sekali
+  var sel = document.getElementById('filterPetaDinas');
+  if (sel.options.length <= 1) {
+    uniq(STATE.rows.map(function (r) { return r.jenisDinas; }).filter(Boolean)).sort().forEach(function (s) {
+      var o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o);
+    });
+    sel.addEventListener('change', function (e) { MAP.dinas = e.target.value; renderPeta(); });
+  }
+
+  // Toggle mode Permohonan / Perusahaan unik: diikat sekali
+  var modeChips = document.getElementById('petaModeChips');
+  if (!modeChips.dataset.bound) {
+    modeChips.dataset.bound = '1';
+    modeChips.addEventListener('click', function (e) {
+      var btn = e.target.closest('.sv-chip[data-mode]');
+      if (!btn) return;
+      MAP.mode = btn.getAttribute('data-mode');
+      modeChips.querySelectorAll('.sv-chip').forEach(function (c) { c.classList.toggle('on', c === btn); });
+      renderPeta();
+    });
+  }
+
+  var rows = MAP.dinas ? d.filter(function (r) { return r.jenisDinas === MAP.dinas; }) : d;
+  var col = DINAS_COLOR[MAP.dinas] || MAP_BLUE;
+
+  // Kelompokkan per kab/kota. Posisi dan nama kab/kota diutamakan dari hasil geocoding Alamat
+  // Pabrik (row.pabrikLat/pabrikLng/pabrikKota, dihitung backend lewat Nominatim) karena itu
+  // lokasi aktual pabrik, bukan sekadar teks kolom Kab/Kota yang bisa merujuk kantor. Selama
+  // alamat belum sempat di-geocode (lihat catatan "sedang diproses" di bawah peta), sementara
+  // dipakai kolom Kab/Kota/Provinsi sebagai jatuh balik supaya baris itu tetap muncul di peta.
+  var groups = {}, order = [], approx = 0, miss = 0, pending = 0, unknown = {};
+  rows.forEach(function (r) {
+    var lat, lng, label, kind;
+    if (r.pabrikLat != null && r.pabrikLng != null) {
+      lat = r.pabrikLat; lng = r.pabrikLng; label = r.pabrikKota || r.kabKota || '(tidak diketahui)'; kind = 'pabrik';
+    } else {
+      pending++;
+      var loc = geoLocate(r.provinsi, r.kabKota);
+      if (!loc) { miss++; unknown[r.kabKota || r.provinsi || '(kosong)'] = 1; return; }
+      lat = loc.lat; lng = loc.lng; kind = loc.level === 'kabkota' ? 'kabkota' : 'provinsi';
+      label = loc.level === 'kabkota' ? r.kabKota : (r.provinsi + ' (pusat provinsi)');
+      if (kind === 'provinsi') { approx++; if (r.kabKota) unknown[r.kabKota] = 1; }
+    }
+    var key = 'g:' + label.toLowerCase();
+    var g = groups[key];
+    if (!g) {
+      g = groups[key] = { label: label, provinsi: r.provinsi, rows: [], dinas: {}, latSum: 0, lngSum: 0, n: 0, pabrikN: 0, kabkotaN: 0, provinsiN: 0 };
+      order.push(g);
+    }
+    g.rows.push(r);
+    g.latSum += lat; g.lngSum += lng; g.n++;
+    g[kind + 'N']++;
+    var dk = r.jenisDinas || 'Tidak diketahui';
+    g.dinas[dk] = (g.dinas[dk] || 0) + 1;
+  });
+  var mappedNames = [];
+  order.forEach(function (g) {
+    // level dipakai untuk gaya marker: 'pabrik' (ada titik asli) turun ke 'kabkota' lalu 'provinsi'
+    // (dashed, perkiraan) hanya kalau SEMUA baris di kelompok itu masih jatuh balik ke pusat provinsi.
+    var level = g.pabrikN ? 'pabrik' : (g.kabkotaN ? 'kabkota' : 'provinsi');
+    g.loc = { lat: g.latSum / g.n, lng: g.lngSum / g.n, level: level };
+    g.uniqNames = uniq(g.rows.map(function (r) { return r.namaPerusahaan; })).sort(function (a, b) { return a.localeCompare(b); });
+    mappedNames = mappedNames.concat(g.uniqNames);
+  });
+  order.sort(function (a, b) { return metricOf(b) - metricOf(a); });
+  MAP.groups = order;
+
+  // KPI
+  var pabrikGroupCount = order.filter(function (g) { return g.pabrikN > 0; }).length;
+  document.getElementById('kpiMapWilayah').textContent = order.length;
+  document.getElementById('kpiMapWilayahFoot').textContent = pabrikGroupCount + ' dari alamat pabrik asli' + (order.length > pabrikGroupCount ? ', ' + (order.length - pabrikGroupCount) + ' sementara pakai Kab/Kota' : '');
+  if (MAP.mode === 'perusahaan') {
+    var uniqTotal = uniq(mappedNames).length;
+    document.getElementById('kpiMapTotalLabel').textContent = 'Perusahaan di Peta';
+    document.getElementById('kpiMapTotal').textContent = uniqTotal;
+    document.getElementById('kpiMapTotalFoot').textContent = 'klien unik' + (MAP.dinas ? ' (' + MAP.dinas + ')' : '') + ', dari ' + (rows.length - miss) + ' permohonan';
+  } else {
+    document.getElementById('kpiMapTotalLabel').textContent = 'Permohonan di Peta';
+    document.getElementById('kpiMapTotal').textContent = rows.length - miss;
+    document.getElementById('kpiMapTotalFoot').textContent = 'dari ' + rows.length + ' permohonan' + (MAP.dinas ? ' (' + MAP.dinas + ')' : '');
+  }
+  document.getElementById('kpiMapMiss').textContent = miss;
+  document.getElementById('kpiMapMissFoot').textContent = approx ? approx + ' memakai pusat provinsi' : (miss ? 'Wilayah belum dikenali' : 'Semua terpetakan');
+  document.getElementById('petaTitle').textContent = MAP.mode === 'perusahaan' ? 'Peta Sebaran Perusahaan per Kab/Kota' : 'Peta Sebaran Permohonan per Kab/Kota';
+
+  var notes = ['Ukuran bubble = ' + (MAP.mode === 'perusahaan' ? 'jumlah perusahaan unik' : 'jumlah permohonan') + ' (tab LK), mengikuti filter Tahun dan Jenis Dinas. Posisi memakai lokasi asli Alamat Pabrik (bukan kolom Kab/Kota).'];
+  if (approx) notes.push('Garis putus-putus = posisi perkiraan (pusat provinsi).');
+  var unk = Object.keys(unknown);
+  if (unk.length) notes.push('Belum ada koordinat untuk: ' + unk.slice(0, 8).join(', ') + (unk.length > 8 ? ', dan ' + (unk.length - 8) + ' lainnya' : '') + '. Tambahkan di Geo.html.');
+  document.getElementById('petaNote').textContent = notes.join(' ');
+  document.getElementById('petaPending').textContent = pending
+    ? pending + ' permohonan masih memakai posisi sementara (Kab/Kota) — alamat pabriknya belum sempat diproses ke koordinat asli, otomatis menyusul beberapa kali muat ulang berikutnya.'
+    : '';
+
+  // Daftar peringkat
+  var rk = document.getElementById('petaRank');
+  var max = order.length ? metricOf(order[0]) : 1;
+  rk.innerHTML = order.length ? order.slice(0, 10).map(function (g, i) {
+    var dinasTxt = Object.keys(g.dinas).map(function (k) { return k + ' ' + g.dinas[k]; }).join(' · ');
+    var val = metricOf(g);
+    var subVal = MAP.mode === 'perusahaan' ? g.rows.length + ' permohonan' : g.uniqNames.length + ' klien unik';
+    return '<div class="map-rank-item" data-i="' + i + '">' +
+      '<span class="map-rank-name">' + escapeHtml(g.label) + '</span><span class="map-rank-val">' + val + '</span>' +
+      '<span class="map-rank-sub">' + escapeHtml(g.provinsi || '') + ' · ' + subVal + ' · ' + escapeHtml(dinasTxt) + '</span>' +
+      '<div class="map-rank-bar"><span style="width:' + Math.round(val / max * 100) + '%;background:' + col + '"></span></div></div>';
+  }).join('') : '<div class="map-empty">Tidak ada data untuk filter ini</div>';
+  if (!MAP.bound) {
+    MAP.bound = true;
+    rk.addEventListener('click', function (e) {
+      var item = e.target.closest('.map-rank-item');
+      if (!item || !MAP.map) return;
+      var g = MAP.groups[parseInt(item.getAttribute('data-i'), 10)];
+      if (!g || !g.marker) return;
+      MAP.map.setView([g.loc.lat, g.loc.lng], Math.max(MAP.map.getZoom(), 9));
+      g.marker.openPopup();
+    });
+  }
+
+  // Gambar peta
+  if (typeof L === 'undefined') {
+    document.getElementById('petaMap').innerHTML = '<div class="map-empty">Library peta (Leaflet) gagal dimuat. Periksa koneksi internet lalu muat ulang.</div>';
+    return;
+  }
+  if (!petaActive()) return;
+  ensureMap();
+
+  document.getElementById('petaMap').classList.toggle('map-dark', mapTheme() === 'dark');
+
+  MAP.layer.clearLayers();
+  var pts = [];
+  order.forEach(function (g) {   // bubble terbesar digambar dulu, yang kecil tetap terlihat di atasnya
+    var n = metricOf(g);
+    var mk = L.circleMarker([g.loc.lat, g.loc.lng], {
+      radius: 8 + 4.2 * Math.sqrt(n), color: col, weight: 2, fillColor: col, fillOpacity: 0.45,
+      dashArray: g.loc.level === 'provinsi' ? '4 3' : null
+    });
+    mk.bindTooltip(String(n), { permanent: true, direction: 'center', className: 'map-count' });
+    mk.bindPopup(petaPopupHtml(g), { maxWidth: 280 });
+    // Klik nama klien di dalam popup: closure ke g.rows supaya bisa cari semua permohonan klien itu di wilayah ini.
+    mk.on('popupopen', function () {
+      var el = mk.getPopup().getElement();
+      if (!el || el.dataset.mpBound) return;
+      el.dataset.mpBound = '1';
+      el.addEventListener('click', function (e) {
+        var nameEl = e.target.closest('.mp-name[data-name]');
+        if (!nameEl) return;
+        var nm = nameEl.getAttribute('data-name');
+        openKlienList(nm, g.rows.filter(function (r) { return r.namaPerusahaan === nm; }));
+      });
+    });
+    mk.addTo(MAP.layer);
+    g.marker = mk;
+    pts.push([g.loc.lat, g.loc.lng]);
+  });
+
+  // Zoom otomatis hanya saat kumpulan titik berubah (bukan saat ganti tema)
+  var sig = MAP.dinas + '|' + order.map(function (g) { return g.label + ':' + g.rows.length; }).join(',');
+  if (sig !== MAP.sig) {
+    MAP.sig = sig;
+    if (pts.length) MAP.map.fitBounds(pts, { padding: [50, 50], maxZoom: 9 });
+    else MAP.map.setView([0.5, 102], 6);
+  }
+}
+
+/* ================== JADWAL RENCANA SURVAILEN (matriks bulan x perusahaan) ==================
+   Sumber tunggal: tab LK (STATE.rows). Tidak terpengaruh filter Tahun/Bulan di atas; punya filter sendiri.
+   1) Sertifikat = baris LK dengan Jenis Permohonan "Umum" dan Status "Terbit" yang punya Tgl Terbit Sertifikat.
+   2) Jadwal = Tgl Terbit + 12 bulan x n  (n = 1..4 Survailen 1-4, n = 5 Re-sertifikasi).
+   3) Realisasi = baris LK berjenis audit "Survailen n" untuk perusahaan yang sama, tanggal acuannya
+      (Tgl Mulai Audit Kesesuaian, lalu Tgl Masuk LSPro, lalu Tgl SIINas, lalu hari ini) dalam jendela waktu dari jadwal;
+      satu baris LK hanya dipasangkan ke satu jadwal (yang terdekat).
+   4) Warna: Selesai / Sedang diproses bila ada realisasi, selain itu menurut sisa hari ke jadwal. */
+var SURV = { kind: 1, year: 0 };
+var SURV_INTERVAL = 12;      // bulan antar survailen
+var SURV_AWAL = 180;         // audit boleh lebih awal sekian hari dari jadwal
+var SURV_TELAT = 540;        // audit boleh lebih lambat sekian hari dari jadwal
+var SV_FINAL = ['Terbit', 'Surat Keputusan'];
+var SURV_KE = [[1, 'Survailen 1'], [2, 'Survailen 2'], [3, 'Survailen 3'], [4, 'Survailen 4'], [5, 'Re-sertifikasi']];
+var SV_STATUS = {
+  done:   { color: '#15803d', rank: 1 },
+  proses: { color: '#3b82f6', rank: 2 },
+  green:  { color: '#22c55e', rank: 3 },
+  amber:  { color: '#f97316', rank: 4 },
+  red:    { color: '#ef4444', rank: 5 },
+  late:   { color: '#991b1b', rank: 6 }
+};
+function svLabel(k) {
+  return {
+    done: 'Selesai',
+    proses: 'Sedang diproses',
+    green: 'Lebih dari ' + REMINDER_BATAS.oranye + ' hari',
+    amber: (REMINDER_BATAS.merah + 1) + '–' + REMINDER_BATAS.oranye + ' hari',
+    red: REMINDER_BATAS.merah + ' hari atau kurang',
+    late: 'Lewat jadwal'
+  }[k];
+}
+
+/* Setara EDATE di Sheets: hari dipotong ke akhir bulan bila bulan tujuan lebih pendek */
+function tambahBulan(d, m) {
+  var t = new Date(d.getFullYear(), d.getMonth() + m, 1);
+  var akhir = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+  return new Date(t.getFullYear(), t.getMonth(), Math.min(d.getDate(), akhir));
+}
+function kunciNama(s) { return String(s || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+function fmtTanggal(d) { return d.getDate() + ' ' + BULAN_PENDEK[d.getMonth()] + ' ' + d.getFullYear(); }
+
+function susunJadwalSurvailen() {
+  var today = startOfDay(new Date());
+  var jadwal = [], tanpaTanggal = [];
+
+  STATE.rows.forEach(function (r) {
+    if ((r.jenisPermohonan || '').trim() !== 'Umum' || r.status !== 'Terbit') return;
+    var t = toDate(r.tglTerbitSertifikat);
+    if (!t) { tanpaTanggal.push(r); return; }
+    for (var n = 1; n <= 5; n++) {
+      jadwal.push({
+        n: n, d: tambahBulan(t, SURV_INTERVAL * n), r: r, lk: null,
+        key: kunciNama(r.namaPerusahaan), nama: (r.namaPerusahaan || '').trim(),
+        catatan: /^survailen/i.test((r.jenisAudit || '').trim())
+      });
+    }
+  });
+
+  var sv = [], adaLk = {};
+  STATE.rows.forEach(function (r) {
+    var m = /^survailen\s*(\d)/i.exec((r.jenisAudit || '').trim());
+    if (!m) return;
+    var n = parseInt(m[1], 10);
+    adaLk[n] = (adaLk[n] || 0) + 1;
+    sv.push({ r: r, n: n, key: kunciNama(r.namaPerusahaan),
+      ref: toDate(r.tglMulaiKesesuaian) || toDate(r.tglMasukLspro) || toDate(r.tglSiinas) || today });
+  });
+
+  var pairs = [];
+  sv.forEach(function (s, si) {
+    jadwal.forEach(function (j, ji) {
+      if (j.n !== s.n || j.key !== s.key) return;
+      var diff = daysBetween(j.d, s.ref);   // positif = audit lebih lambat dari jadwal
+      if (diff >= -SURV_AWAL && diff <= SURV_TELAT) pairs.push({ dist: Math.abs(diff), si: si, ji: ji });
+    });
+  });
+  pairs.sort(function (a, b) { return a.dist - b.dist || a.si - b.si || a.ji - b.ji; });
+  var usedS = {}, usedJ = {};
+  pairs.forEach(function (p) {
+    if (usedS[p.si] || usedJ[p.ji]) return;
+    usedS[p.si] = true; usedJ[p.ji] = true;
+    jadwal[p.ji].lk = sv[p.si].r;
+  });
+
+  jadwal.forEach(function (j) {
+    j.sisa = daysBetween(today, j.d);
+    if (j.lk) j.st = SV_FINAL.indexOf(j.lk.status) !== -1 ? 'done' : 'proses';
+    else j.st = j.sisa < 0 ? 'late' : j.sisa <= REMINDER_BATAS.merah ? 'red' : j.sisa <= REMINDER_BATAS.oranye ? 'amber' : 'green';
+  });
+  return { jadwal: jadwal, tanpaTanggal: tanpaTanggal, adaLk: adaLk };
+}
+
+function tipSurvailen(j) {
+  var b = [j.nama + ' · ' + SURV_KE[j.n - 1][1] + ' · jadwal ' + fmtTanggal(j.d)];
+  if (j.st === 'late') b.push('Lewat ' + Math.abs(j.sisa) + ' hari, belum ada survailen di LK');
+  else if (j.lk) b.push('Status: ' + svLabel(j.st));
+  else b.push(j.sisa === 0 ? 'Jadwal hari ini' : j.sisa + ' hari lagi');
+  if (j.lk) {
+    var tgl = toDate(j.lk.tglMulaiKesesuaian);
+    b.push('Di LK: No ' + j.lk.no + ', ' + j.lk.jenisAudit + ', status ' + (j.lk.status || '-') + (tgl ? ', audit mulai ' + fmtTanggal(tgl) : ', belum ada tanggal audit'));
+  }
+  if (j.r.noSertifikat) b.push('No. sertifikat: ' + j.r.noSertifikat);
+  if (j.r.komoditi || j.r.produk) b.push('Komoditi: ' + (j.r.komoditi || j.r.produk));
+  if (j.catatan && j.n < 5) b.push('Catatan: sertifikat ini terbit dari audit ' + j.r.jenisAudit + '. Periksa apakah jadwal ini sebenarnya Survailen ' + (j.n + 1) + '.');
+  return b.join('\n');
+}
+
+function initSurvailen() {
+  document.getElementById('svChips').addEventListener('click', function (e) {
+    var b = e.target.closest('.sv-chip');
+    if (!b) return;
+    SURV.kind = parseInt(b.getAttribute('data-k'), 10);
+    renderSurvailen();
+  });
+  document.getElementById('svTahun').addEventListener('change', function (e) {
+    SURV.year = parseInt(e.target.value, 10);
+    renderSurvailen();
+  });
+}
+
+function renderSurvailen() {
+  var data = susunJadwalSurvailen();
+  var kind = SURV.kind;
+  var kindJadwal = data.jadwal.filter(function (j) { return j.n === kind; });
+
+  // Pilihan tahun: dari jadwal yang ada; pertahankan pilihan lama, kalau tidak ada pakai tahun ini
+  var years = uniq(kindJadwal.map(function (j) { return j.d.getFullYear(); })).sort(function (a, b) { return a - b; });
+  var thisYear = new Date().getFullYear();
+  if (years.indexOf(SURV.year) === -1) SURV.year = years.indexOf(thisYear) !== -1 ? thisYear : (years[0] || thisYear);
+  document.getElementById('svTahun').innerHTML = years.map(function (y) {
+    return '<option value="' + y + '"' + (y === SURV.year ? ' selected' : '') + '>' + y + '</option>';
+  }).join('') || '<option>-</option>';
+  document.getElementById('svChips').innerHTML = SURV_KE.map(function (k) {
+    return '<button type="button" class="sv-chip' + (k[0] === kind ? ' on' : '') + '" data-k="' + k[0] + '">' + k[1] + '</button>';
+  }).join('');
+
+  var list = kindJadwal.filter(function (j) { return j.d.getFullYear() === SURV.year; });
+
+  // Legenda + jumlah per status
+  var cnt = {};
+  list.forEach(function (j) { cnt[j.st] = (cnt[j.st] || 0) + 1; });
+  document.getElementById('svLegend').innerHTML =
+    ['done', 'proses', 'green', 'amber', 'red', 'late'].map(function (k) {
+      return '<span class="rm-chip"><i style="background:' + SV_STATUS[k].color + '"></i>' + svLabel(k) + ' <b>' + (cnt[k] || 0) + '</b></span>';
+    }).join('') + '<span class="rm-note">Total jadwal: <b>' + list.length + '</b></span>';
+
+  // Baris per perusahaan, urut dari jadwal paling awal
+  var rows = {};
+  list.forEach(function (j) {
+    var g = rows[j.key] || (rows[j.key] = { nama: j.nama, first: j.d, m: [] });
+    for (var i = 0; i < 12; i++) if (!g.m[i]) g.m[i] = [];
+    if (j.d < g.first) g.first = j.d;
+    g.m[j.d.getMonth()].push(j);
+  });
+  var arr = Object.keys(rows).map(function (k) { return rows[k]; })
+    .sort(function (a, b) { return a.first - b.first || a.nama.localeCompare(b.nama); });
+
+  var curM = SURV.year === new Date().getFullYear() ? new Date().getMonth() : -1;
+  var h = '<thead><tr><th class="nm">Nama Perusahaan</th>' + BULAN_PENDEK.map(function (b, i) {
+    return '<th' + (i === curM ? ' class="now"' : '') + '>' + b + '</th>';
+  }).join('') + '<th class="tot">Total</th></tr></thead><tbody>';
+  if (!arr.length) {
+    h += '<tr><td class="nm sv-empty" colspan="14">Tidak ada jadwal ' + SURV_KE[kind - 1][1].toLowerCase() + ' di tahun ' + SURV.year + '.</td></tr>';
+  }
+  arr.forEach(function (g) {
+    var total = 0;
+    h += '<tr><td class="nm" title="' + escapeHtml(g.nama) + '">' + escapeHtml(g.nama) + '</td>';
+    for (var i = 0; i < 12; i++) {
+      var es = g.m[i] || [];
+      var cls = i === curM ? ' class="now"' : '';
+      if (!es.length) { h += '<td' + cls + '></td>'; continue; }
+      total += es.length;
+      var worst = es.reduce(function (a, e) { return SV_STATUS[e.st].rank > SV_STATUS[a].rank ? e.st : a; }, es[0].st);
+      h += '<td' + cls + '><span class="sv-cell" style="background:' + SV_STATUS[worst].color + '" data-st="' + worst + '" title="' +
+        escapeHtml(es.map(tipSurvailen).join('\n\n')) + '"></span></td>';
+    }
+    h += '<td class="tot">' + total + '</td></tr>';
+  });
+  h += '<tr class="gt"><td class="nm">Total</td>';
+  for (var mi = 0; mi < 12; mi++) {
+    var n = list.filter(function (j) { return j.d.getMonth() === mi; }).length;
+    h += '<td' + (mi === curM ? ' class="now"' : '') + '>' + (n || '') + '</td>';
+  }
+  h += '<td class="tot">' + list.length + '</td></tr></tbody>';
+  document.getElementById('svTable').innerHTML = h;
+
+  // Catatan di bawah tabel
+  var notes = ['Jadwal dihitung dari Tgl Terbit Sertifikat di LK + ' + SURV_INTERVAL + ' bulan untuk tiap survailen (hanya Jenis Permohonan Umum berstatus Terbit). Arahkan kursor ke kotak berwarna untuk rincian.'];
+  if (data.tanpaTanggal.length) {
+    var nm = data.tanpaTanggal.slice(0, 5).map(function (r) { return r.namaPerusahaan + ' (No ' + r.no + ')'; });
+    notes.push(data.tanpaTanggal.length + ' sertifikat berstatus Terbit belum punya Tgl Terbit sehingga tidak dapat dijadwalkan: ' + nm.join(', ') +
+      (data.tanpaTanggal.length > 5 ? ', dan ' + (data.tanpaTanggal.length - 5) + ' lainnya' : '') + '.');
+  }
+  if (kind >= 2 && kind <= 4 && !data.adaLk[kind]) {
+    notes.push('Belum ada baris "Survailen ' + kind + '" di LK, jadi status Selesai atau Sedang diproses baru terbaca setelah Jenis Audit di LK ditulis "Survailen ' + kind + '".');
+  }
+  var cat = list.filter(function (j) { return j.catatan && j.n < 5; }).length;
+  if (cat) notes.push(cat + ' jadwal berasal dari sertifikat yang terbit setelah audit Survailen; periksa apakah sebenarnya survailen berikutnya (lihat tooltip).');
+  document.getElementById('svNote').textContent = notes.join(' ');
+}
+</script>
+</body>
+</html>
