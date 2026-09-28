@@ -178,7 +178,7 @@ export const proyek: Proyek[] = [
     demo: [
       {
         judul: "Demo: Dashboard Kinerja LSPro",
-        href: "/demo/lspro-kinerja/dashboard.html",
+        href: "/demo/lspro-kinerja/dashboard",
         deskripsi: "Pilih menu di sidebar untuk berpindah halaman. Buka layar penuh untuk melihat peta sebaran.",
       },
     ],
@@ -231,12 +231,12 @@ export const proyek: Proyek[] = [
     demo: [
       {
         judul: "Demo LPH: Jadwal Auditor Halal",
-        href: "/demo/lph/dashboard.html",
+        href: "/demo/lph/dashboard",
         deskripsi: "Rekomendasi giliran, matriks ruang lingkup, sertifikat habis, dan aturan unit kerja.",
       },
       {
         judul: "Demo LSPro: Jadwal per Jenis Dinas",
-        href: "/demo/lspro/dashboard.html",
+        href: "/demo/lspro/dashboard",
         deskripsi: "5 peran tim audit, matriks personil × komoditi, dan 3 grafik analisis.",
       },
     ],

@@ -3,8 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Maximize2 } from "lucide-react";
 
+// Demo ada di public/demo/*/dashboard.html. Vercel menyajikannya sebagai /demo/x/dashboard/ (tanpa .html),
+// sedangkan `next dev` hanya menyajikan nama file lengkap.
+const alamatDemo = (href: string) => (process.env.NODE_ENV === "development" ? `${href}.html` : `${href}/`);
+
 // Pratinjau langsung demo dashboard: iframe selebar 1280px diperkecil agar pas dengan kotak
-export default function BingkaiDemo({ href, judul }: { href: string; judul: string }) {
+export default function BingkaiDemo({ href: dasar, judul }: { href: string; judul: string }) {
+  const href = alamatDemo(dasar);
   const kotak = useRef<HTMLDivElement>(null);
   const [skala, setSkala] = useState(0.5);
   const [muat, setMuat] = useState(false);
