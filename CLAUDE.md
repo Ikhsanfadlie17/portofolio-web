@@ -46,9 +46,14 @@ Selesai 15 Okt (sesi kedua):
   kualitas data. Demo `lspro-kinerja/` masih versi 6 halaman (disebut di catatan proyek).
 - Ilustrasi kartu: varian `jadwal` diganti `halal` (angkanya sama dengan Ikhtisar demo).
 
-Belum dikerjakan (urutan saran, tanya user dulu):
-1. Periode proyek LPH ditulis "Oktober 2026 – sekarang" (commit pertama repo 7 Okt); konfirmasi ke user.
-2. Demo LSPro belum memuat tab Rotasi Tugas; butuh data dummy + `DinasData.js` dari repo `dashboard-lspro`.
-3. Klaim "SQL" di stack Sistem Klinik dan "Power BI" di keahlian: konfirmasi ke user apakah benar dipakai.
-4. Sertifikasi: `page.tsx` sudah me-render semua isi `sertifikasi`, jadi ISO 9001 seharusnya sudah tampil; cek di situs live.
-5. Beranda melebar ±20 px di layar HP (elemen `ring-spin` di Hero keluar dari layar); halaman proyek tidak.
+Selesai 15 Okt (sesi ketiga, dicek di situs live):
+- HP tidak lagi melebar (`html { overflow-x: clip }`); animasi masuk Hero pakai CSS (`.masuk-naik`, `.masuk-kata`) agar
+  teks tampil tanpa menunggu JavaScript; `aria-label` nama di h1.
+- Label Hero "Data Analyst · Dashboard · Data Quality" (status "Terbuka untuk peluang kerja" dihapus); kontak hanya
+  "Data Analyst"; klinik "Sistem Manajemen Klinik Berbasis Web" (fokus backend, sesuai CV); Power BI dihapus (tidak ada
+  di CV); periode LPH "September 2026 – sekarang"; ejaan "kebinekaan". ISO 9001 tampil di bagian Sertifikasi.
+
+Belum dikerjakan (tanya user dulu):
+1. Demo LSPro belum memuat tab Rotasi Tugas; butuh data dummy + `DinasData.js` dari repo `dashboard-lspro`.
+2. "SQL" di stack Sistem Klinik dibiarkan (backend memakai basis data); konfirmasi ke user bila ragu.
+3. URL lama `/proyek/dashboard-monitoring/` dan `/demo/lph/dashboard/` sekarang 404; buat redirect bila pernah dibagikan.
