@@ -40,6 +40,8 @@ html {
   scroll-padding-top: 88px;
   background: var(--bg);
   color-scheme: dark;
+  /* body overflow-x saja tidak cukup di HP: elemen dekorasi melebarkan layout viewport */
+  overflow-x: clip;
 }
 
 body {
@@ -167,7 +169,22 @@ body {
   box-shadow: 0 12px 40px -6px rgba(34, 211, 238, 0.6);
 }
 
+/* Animasi masuk Hero dengan CSS, supaya teks langsung tampil tanpa menunggu JavaScript selesai dimuat */
+.masuk-naik {
+  animation: masuk-naik 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes masuk-naik {
+  from { opacity: 0; transform: translateY(16px); }
+}
+.masuk-kata {
+  display: inline-block;
+  animation: masuk-kata 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes masuk-kata {
+  from { opacity: 0; transform: translateY(40px) rotateX(-80deg); filter: blur(10px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .text-gradient, .ring-spin, .marquee-track, .caret { animation: none; }
+  .text-gradient, .ring-spin, .marquee-track, .caret, .masuk-naik, .masuk-kata { animation: none; }
 }

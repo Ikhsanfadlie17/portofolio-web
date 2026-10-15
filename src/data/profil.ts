@@ -17,7 +17,7 @@ export const profil = {
   fotoAvatar: "/img/foto-avatar.webp",
   tentang: [
     "Saya lulusan S1 Teknik Informatika Universitas Islam Riau dengan fokus Kecerdasan Buatan dan Data Science. Saya senang memecahkan masalah nyata dengan data: merapikan data yang berantakan, menemukan polanya, lalu menyajikannya dalam bentuk yang langsung bisa dipakai untuk mengambil keputusan.",
-    "Skripsi saya membangun sistem rekomendasi latihan fitness berbasis GraphRAG, yaitu gabungan knowledge graph Neo4j dan LLM yang jawabannya bisa dijelaskan secara ilmiah. Di dunia kerja, saya membangun dashboard monitoring untuk instansi pemerintah dan sistem manajemen klinik full-stack.",
+    "Skripsi saya membangun sistem rekomendasi latihan fitness berbasis GraphRAG, yaitu gabungan knowledge graph Neo4j dan LLM yang jawabannya bisa dijelaskan secara ilmiah. Di dunia kerja, saya membangun dashboard monitoring untuk instansi pemerintah dan sistem manajemen klinik berbasis web.",
     "Di luar teknis, saya terbiasa memimpin: dari Ketua Modul Nusantara yang membawahi 26 mahasiswa dari 19 universitas, hingga Ketua Humas organisasi robotik & IoT.",
   ],
 };
@@ -134,7 +134,7 @@ export const proyek: Proyek[] = [
     kategori: "Data Analytics · Dashboard · Data Quality",
     ringkas:
       "Web app 9 halaman untuk Lembaga Pemeriksa Halal BSPJI Pekanbaru: memantau ±130 pengajuan sertifikasi halal di sepanjang alur SIHALAL, dari SPK sampai Sertifikat Halal terbit, lengkap dengan giliran auditor, kalender audit, dan laporan triwulan.",
-    periode: "Oktober 2026 – sekarang",
+    periode: "September 2026 – sekarang",
     peran: "Data Analyst Intern · BSPJI Pekanbaru",
     warna: "cyan",
     stack: ["Google Apps Script", "Google Sheets", "JavaScript", "Leaflet", "clasp", "Python", "Data Quality"],
@@ -260,8 +260,8 @@ export const proyek: Proyek[] = [
   },
   {
     slug: "sistem-klinik",
-    judul: "Sistem Manajemen Klinik Full-Stack",
-    kategori: "Full-Stack · Backend · Dashboard Analitik",
+    judul: "Sistem Manajemen Klinik Berbasis Web",
+    kategori: "Backend · Next.js · Dashboard Analitik",
     ringkas:
       "Aplikasi web manajemen klinik dengan stok obat real-time, analisis data pasien, dan dashboard analitik untuk keputusan operasional.",
     periode: "Mei – Juli 2025",
@@ -277,7 +277,7 @@ export const proyek: Proyek[] = [
       "Pengambilan keputusan operasional belum didukung data.",
     ],
     pendekatan: [
-      { judul: "Arsitektur full-stack Next.js", isi: "Merancang dan membangun sistem manajemen klinik berbasis web dengan pembagian peran backend dan frontend yang terstruktur." },
+      { judul: "Backend Next.js", isi: "Membangun sistem manajemen klinik berbasis web dalam tim dua orang, dengan tanggung jawab utama pada sisi backend dan pembagian peran backend–frontend yang jelas." },
       { judul: "Modul stok obat", isi: "Mengembangkan pencatatan obat masuk dan keluar secara real-time." },
       { judul: "Analisis data pasien", isi: "Membangun fitur analisis tanggal kunjungan dan riwayat pembelian obat." },
       { judul: "Dashboard analitik", isi: "Visualisasi grafik real-time untuk mendukung keputusan operasional klinik." },
@@ -352,7 +352,7 @@ export const keahlian = [
   {
     kelompok: "Data Analytics",
     ikon: "chart",
-    item: ["Data Analysis", "Data Cleaning", "Data Visualization", "Microsoft Excel", "Google Sheets", "Power BI"],
+    item: ["Data Analysis", "Data Cleaning", "Data Visualization", "Microsoft Excel", "Google Sheets", "Dashboard & KPI"],
   },
   {
     kelompok: "Pemrograman",
@@ -377,7 +377,7 @@ export const softSkill = [
 
 export const marquee = [
   "Python", "Neo4j", "LangChain", "OpenAI", "Next.js", "TypeScript", "SQL", "Cypher", "Flask",
-  "Google Apps Script", "Chart.js", "Power BI", "Excel", "Streamlit", "Git", "Machine Learning", "GraphRAG",
+  "Google Apps Script", "Chart.js", "Excel", "Streamlit", "Git", "Machine Learning", "GraphRAG",
 ];
 
 export const pendidikan = [
@@ -432,7 +432,7 @@ export const organisasi = [
     peran: "Ketua Modul Nusantara",
     tempat: "Pertukaran Mahasiswa Merdeka · UGM",
     periode: "Feb – Jun 2024",
-    isi: "Memimpin 26 mahasiswa dari 19 universitas dan 13 provinsi dalam kegiatan kebhinekaan, inspirasi, refleksi, dan kontribusi sosial.",
+    isi: "Memimpin 26 mahasiswa dari 19 universitas dan 13 provinsi dalam kegiatan kebinekaan, inspirasi, refleksi, dan kontribusi sosial.",
   },
   {
     peran: "Ketua Humas",

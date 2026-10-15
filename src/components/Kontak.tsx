@@ -32,8 +32,8 @@ export default function Kontak() {
                 Punya data yang perlu <span className="text-gradient">dijadikan keputusan?</span>
               </h2>
               <p className="relative mx-auto mt-5 max-w-xl text-ink-soft sm:text-lg">
-                Saya terbuka untuk posisi Data Analyst, Data Scientist, dan AI Engineer, baik penuh waktu maupun
-                proyek. Siap ditempatkan di mana saja.
+                Saya terbuka untuk posisi Data Analyst, baik penuh waktu maupun proyek. Siap ditempatkan di mana
+                saja.
               </p>
 
               <div className="relative mt-9 flex flex-wrap items-center justify-center gap-3">

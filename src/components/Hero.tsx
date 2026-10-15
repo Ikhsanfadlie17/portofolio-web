@@ -56,61 +56,49 @@ export default function Hero() {
     <section id="beranda" className="relative flex min-h-[100svh] items-center pt-28 pb-16">
       <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-5 lg:grid-cols-[1.25fr_1fr]">
         <motion.div style={{ opacity: opac }}>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="glass mb-6 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium text-ink-soft"
-          >
+          <div className="masuk-naik glass mb-6 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium text-ink-soft">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald" />
             </span>
-            Terbuka untuk peluang kerja · Data & AI
-          </motion.div>
+            Data Analyst · Dashboard · Data Quality
+          </div>
 
           <p className="mb-3 font-mono text-sm text-ink-faint">
             <span className="text-violet">const</span> halo = <span className="text-emerald">&quot;Saya&quot;</span>;
           </p>
 
-          <h1 className="font-display text-[clamp(2.6rem,7vw,5rem)] leading-[1.02] font-bold tracking-tight">
+          <h1
+            aria-label={profil.nama}
+            className="font-display text-[clamp(2.6rem,7vw,5rem)] leading-[1.02] font-bold tracking-tight"
+          >
             {kataNama.map((kata, k) => (
-              <motion.span
+              <span
                 key={k}
-                className="text-gradient mr-[0.25em] inline-block whitespace-nowrap"
-                initial={{ opacity: 0, y: 40, rotateX: -80, filter: "blur(10px)" }}
-                animate={{ opacity: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
-                transition={{ delay: 0.15 + k * 0.14, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                aria-hidden="true"
+                className="masuk-kata text-gradient mr-[0.25em] whitespace-nowrap"
+                style={{ animationDelay: `${0.1 + k * 0.12}s` }}
               >
                 {kata}
-              </motion.span>
+              </span>
             ))}
           </h1>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.9 }}
-            className="mt-5 h-9 font-display text-[clamp(1.25rem,3vw,1.75rem)] font-semibold text-ink"
+          <p
+            className="masuk-naik mt-5 h-9 font-display text-[clamp(1.25rem,3vw,1.75rem)] font-semibold text-ink"
+            style={{ animationDelay: "0.45s" }}
           >
             <MesinKetik kata={profil.peran} />
-          </motion.p>
+          </p>
 
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.05, duration: 0.7 }}
-            className="mt-5 max-w-xl text-base leading-relaxed text-ink-soft sm:text-lg"
+          <p
+            className="masuk-naik mt-5 max-w-xl text-base leading-relaxed text-ink-soft sm:text-lg"
+            style={{ animationDelay: "0.55s" }}
           >
             {profil.tagline}
-          </motion.p>
+          </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.2, duration: 0.7 }}
-            className="mt-8 flex flex-wrap items-center gap-3"
-          >
+          <div className="masuk-naik mt-8 flex flex-wrap items-center gap-3" style={{ animationDelay: "0.65s" }}>
             <Magnet>
               <a
                 href="#proyek"
@@ -139,16 +127,11 @@ export default function Hero() {
                 <IkonGithub />
               </a>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.4 }}
-            className="mt-6 inline-flex items-center gap-1.5 text-sm text-ink-faint"
-          >
+          <p className="masuk-naik mt-6 inline-flex items-center gap-1.5 text-sm text-ink-faint" style={{ animationDelay: "0.75s" }}>
             <MapPin size={14} /> {profil.lokasi}
-          </motion.p>
+          </p>
         </motion.div>
 
         <motion.div
