@@ -5,7 +5,7 @@ export const profil = {
   namaPendek: "Ikhsan",
   inisial: "INF",
   situs: "https://ikhsannurfadlie.vercel.app",
-  peran: ["Data Analyst", "AI Engineer", "Data Scientist", "GraphRAG & LLM Builder"],
+  peran: ["Data Analyst", "Dashboard Developer", "AI Engineer", "GraphRAG & LLM Builder"],
   tagline:
     "Mengubah data mentah menjadi keputusan, mulai dari dashboard monitoring instansi hingga sistem rekomendasi berbasis GraphRAG dan Large Language Model.",
   lokasi: "Pekanbaru, Riau · siap ditempatkan di mana saja",
@@ -294,17 +294,18 @@ export const pengalaman: Pengalaman[] = [
     jenis: "Magang · On-site",
     periode: "Agu 2026 – sekarang",
     poin: [
-      "Membangun dashboard kinerja sertifikasi LSPro 6 halaman (KPI, SLA, komoditas) dengan peta sebaran klien berbasis Leaflet + OpenStreetMap.",
-      "Membangun dua dashboard monitoring penugasan auditor (LSPro & LPH) dengan Google Apps Script dan Chart.js.",
-      "Mengaudit kualitas data monitoring klien dan merancang validasi berbasis kompetensi auditor untuk 12 ruang lingkup halal.",
-      "Menganalisis dan mengolah data hasil pengujian produk/laboratorium agar siap diolah lebih lanjut.",
+      "Membangun dashboard pemantauan Lembaga Pemeriksa Halal (LPH) dengan Google Sheets dan Google Apps Script: perkembangan ±130 pengajuan sertifikasi halal per tahap, jadwal audit, peta sebaran, dan laporan triwulan.",
+      "Membangun dashboard kinerja Lembaga Sertifikasi Produk (LSPro): indikator kinerja utama, ketepatan waktu layanan (SLA), dan peta sebaran klien.",
+      "Merancang aturan pembagian tugas auditor yang merata berdasarkan jenis perjalanan dinas, kewenangan, masa berlaku sertifikat, dan jadwal yang bertabrakan.",
+      "Mencocokkan data pemantauan klien dengan data Penerimaan Negara Bukan Pajak (PNBP) berdasarkan nomor SPK dan melaporkan data yang tidak sesuai kepada unit terkait.",
+      "Menyusun 17 pemeriksaan kualitas data otomatis serta kode akses untuk melindungi data klien.",
     ],
-    tag: ["Data Analysis", "Dashboard", "Apps Script", "Data Cleaning"],
+    tag: ["Data Analysis", "Dashboard", "Apps Script", "Data Cleaning", "Data Quality"],
   },
   {
     jabatan: "Asisten Dosen",
     tempat: "Universitas Islam Riau",
-    jenis: "Freelance",
+    jenis: "Paruh Waktu",
     periode: "Apr 2025 – Jan 2026",
     poin: [
       "Membantu pengajaran dan praktikum Pengenalan Kecerdasan Buatan serta Organisasi & Arsitektur Komputer.",
@@ -319,7 +320,7 @@ export const pengalaman: Pengalaman[] = [
     jenis: "Magang",
     periode: "Mei – Jul 2025",
     poin: [
-      "Merancang dan membangun sistem manajemen klinik berbasis web dengan Full-Stack Next.js.",
+      "Membangun sistem manajemen klinik berbasis web (Next.js) dalam tim dua orang, dengan fokus pada sisi backend.",
       "Mengembangkan modul stok obat real-time serta analisis data kunjungan dan pembelian obat pasien.",
       "Membangun dashboard analitik dengan grafik real-time untuk keputusan operasional.",
     ],
@@ -370,7 +371,7 @@ export const pendidikan = [
     program: "S1 Teknik Informatika",
     periode: "Sep 2022 – Apr 2026",
     detail: [
-      "Lulus dalam 3 tahun 6 bulan · Cumlaude",
+      "Lulus dengan predikat Cumlaude",
       "Fokus studi: Kecerdasan Buatan & Data Science",
       "Skripsi: Sistem Rekomendasi Latihan Fitness Berbasis Semantic Science-Based Training Menggunakan GraphRAG",
     ],
@@ -381,14 +382,20 @@ export const pendidikan = [
     program: "Pertukaran Mahasiswa Merdeka · Ilmu Komputer",
     periode: "Feb – Jun 2024",
     detail: [
-      "Terpilih melalui seleksi nasional untuk satu semester di UGM",
-      "Perkuliahan lintas disiplin selama satu semester penuh",
+      "Lolos seleksi nasional Kemendikbudristek untuk mengikuti perkuliahan selama satu semester di UGM",
     ],
     ipk: null,
   },
 ];
 
 export const sertifikasi = [
+  {
+    judul: "Pengenalan Sistem Manajemen Mutu ISO 9001:2015",
+    penerbit: "LPK BSPJI Pekanbaru",
+    tanggal: "Okt 2026",
+    id: "019/BSPJI-Pekanbaru/LPKP/X/2026",
+    link: null as string | null,
+  },
   {
     judul: "Data Analyst",
     penerbit: "Dsarea (Digital Skills Area)",
