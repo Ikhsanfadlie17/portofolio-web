@@ -89,21 +89,34 @@ export function IlustrasiPeta() {
   );
 }
 
+// Isi ilustrasi per varian; angka halal sama dengan Ikhtisar di demo LPH
+const VARIAN = {
+  halal: {
+    judul: "lph-halal / ikhtisar",
+    batang: [40, 40, 60, 30, 70, 50, 100, 80],
+    kotak: [["SH terbit", 98], ["Berjalan", 29], ["Tidak lolos", 3], ["Hari SPK–SH", 75]],
+  },
+  klinik: {
+    judul: "klinik / analitik",
+    batang: [40, 55, 48, 72, 66, 90, 78, 84],
+    kotak: [["Pasien", 68], ["Obat masuk", 65], ["Obat keluar", 46], ["Stok", 43]],
+  },
+} as const;
+
 // Ilustrasi dashboard mini beranimasi (dipakai bila tidak ada tangkapan layar)
-export function IlustrasiDashboard({ warna = "cyan", varian = "jadwal" }: { warna?: keyof typeof WARNA; varian?: "jadwal" | "klinik" }) {
+export function IlustrasiDashboard({ warna = "cyan", varian = "halal" }: { warna?: keyof typeof WARNA; varian?: keyof typeof VARIAN }) {
   const [a, b] = WARNA[warna];
-  const batang = varian === "jadwal" ? [62, 38, 80, 54, 70, 45, 88, 58] : [40, 55, 48, 72, 66, 90, 78, 84];
-  const kotak = varian === "jadwal" ? ["Dalam Kota", "Darat", "Udara", "Luar Negeri"] : ["Pasien", "Obat masuk", "Obat keluar", "Stok"];
+  const { judul, batang, kotak } = VARIAN[varian];
   return (
     <div className="relative h-full w-full overflow-hidden rounded-xl bg-[#070b17] p-4 font-mono text-[10px] text-ink-faint">
       <div className="mb-3 flex items-center gap-1.5">
         <span className="h-2 w-2 rounded-full bg-red-400/70" />
         <span className="h-2 w-2 rounded-full bg-yellow-400/70" />
         <span className="h-2 w-2 rounded-full bg-emerald-400/70" />
-        <span className="ml-2 truncate">{varian === "jadwal" ? "jadwal-dinas / dashboard" : "klinik / analitik"}</span>
+        <span className="ml-2 truncate">{judul}</span>
       </div>
       <div className="mb-3 grid grid-cols-4 gap-2">
-        {kotak.map((k, i) => (
+        {kotak.map(([k, n], i) => (
           <motion.div
             key={k}
             className="rounded-md border border-white/5 bg-white/[0.03] p-2"
@@ -114,7 +127,7 @@ export function IlustrasiDashboard({ warna = "cyan", varian = "jadwal" }: { warn
           >
             <div className="truncate">{k}</div>
             <div className="mt-1 text-sm font-bold text-ink" style={{ color: i === 0 ? a : undefined }}>
-              {[28, 25, 6, 3][i] + (varian === "klinik" ? 40 : 0)}
+              {n}
             </div>
           </motion.div>
         ))}

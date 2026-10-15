@@ -129,22 +129,86 @@ export const proyek: Proyek[] = [
       "Pengembangan lanjutan: semantic search berbasis vektor untuk pertanyaan konseptual, personalisasi profil pengguna, dan optimasi waktu respons.",
   },
   {
+    slug: "dashboard-sertifikasi-halal",
+    judul: "Dashboard Monitoring Sertifikasi Halal (LPH)",
+    kategori: "Data Analytics · Dashboard · Data Quality",
+    ringkas:
+      "Web app 9 halaman untuk Lembaga Pemeriksa Halal BSPJI Pekanbaru: memantau ±130 pengajuan sertifikasi halal di sepanjang alur SIHALAL, dari SPK sampai Sertifikat Halal terbit, lengkap dengan giliran auditor, kalender audit, dan laporan triwulan.",
+    periode: "Oktober 2026 – sekarang",
+    peran: "Data Analyst Intern · BSPJI Pekanbaru",
+    warna: "cyan",
+    stack: ["Google Apps Script", "Google Sheets", "JavaScript", "Leaflet", "clasp", "Python", "Data Quality"],
+    sorotan: ["9 halaman, dipakai tim LPH", "17 pemeriksaan kualitas data", "Siklus giliran auditor"],
+    konteks:
+      "Setiap pengajuan sertifikasi halal melewati alur SIHALAL: SPK dan pembayaran, audit oleh auditor halal LPH, perbaikan temuan oleh pelaku usaha, Laporan Hasil Audit (LHA), sidang Komisi Fatwa, hingga Sertifikat Halal (SH) diterbitkan BPJPH. Semua tahap dicatat manual di satu sheet monitoring, sehingga posisi tiap pengajuan, beban auditor, dan lama proses sulit dibaca langsung.",
+    masalah: [
+      "Posisi ±130 pengajuan di tujuh tahap alur tidak terlihat sekaligus; mencari satu pengajuan berarti menelusuri baris demi baris.",
+      "Waktu tunggu tercampur: tidak jelas berapa lama pengajuan berada di LPH, di pelaku usaha, di Komisi Fatwa, atau di BPJPH.",
+      "Giliran auditor harus merata per jenis dinas sambil memperhatikan kewenangan 12 ruang lingkup, masa berlaku sertifikat, dan jadwal yang bentrok.",
+      "Sheet diisi manual: kolom kosong, tanggal diketik sebagai teks, dan isian yang tertinggal dari catatan PNBP.",
+    ],
+    pendekatan: [
+      {
+        judul: "Model data alur SIHALAL",
+        isi: "Apps Script membaca sheet monitoring lewat nama judul kolom (tahan terhadap kolom yang bergeser), menghitung satu pengajuan sekali per Nomor SPK, dan menentukan posisinya di 7 tahap dari tanggal terakhir yang terisi.",
+      },
+      {
+        judul: "Lacak pengajuan & ke mana waktu pergi",
+        isi: "Pencarian per nama usaha, SPK, atau auditor dengan linimasa tiap tahap. Lama proses dipecah menjadi waktu LPH, di luar kerja LPH, Komisi Fatwa, dan BPJPH, plus daftar pengajuan yang tertahan dibanding kuartil 3 tahap yang sama.",
+      },
+      {
+        judul: "Giliran & siklus auditor",
+        isi: "Rekomendasi giliran per jenis dinas: tugas paling sedikit lebih dulu, lalu yang paling lama tidak bertugas. Auditor yang tidak berwenang, sertifikatnya habis, atau jadwalnya bentrok otomatis dilewati, dan siklus giliran mencatat siapa yang sudah mendapat jatah.",
+      },
+      {
+        judul: "Kalender, peta, dan laporan",
+        isi: "Kalender audit bulanan per auditor dengan penanda bentrok dan tanggal merah, Peta Halal per kabupaten/kota dengan Leaflet, serta Laporan Triwulan TW I–IV yang angkanya bisa diklik dan siap dicetak ke PDF.",
+      },
+      {
+        judul: "Kesehatan data",
+        isi: "17 pemeriksaan otomatis bertingkat (wajib, penting, info), misalnya status PNBP sudah Closed tetapi LHA belum diisi atau urutan tanggal tahap terbalik, lengkap dengan daftar isian per pengajuan untuk admin.",
+      },
+      {
+        judul: "Akses aman & uji lokal",
+        isi: "Kode akses admin dan pengunjung disimpan sebagai hash bergaram dengan tiket harian bertanda tangan HMAC. Logika server diuji lokal dengan Node.js tanpa menyentuh Google Sheets.",
+      },
+    ],
+    metrik: [
+      { nilai: "9", label: "Halaman analitik dalam satu web app" },
+      { nilai: "±130", label: "Pengajuan sertifikasi halal dipantau" },
+      { nilai: "7", label: "Tahap alur SIHALAL, dari SPK sampai SH" },
+      { nilai: "17", label: "Pemeriksaan kualitas data otomatis" },
+      { nilai: "12", label: "Ruang lingkup halal dicek kewenangannya" },
+    ],
+    gambar: [],
+    demo: [
+      {
+        judul: "Demo: Dashboard LPH",
+        href: "/demo/lph-halal/dashboard",
+        deskripsi: "Dibuka sebagai admin. Pilih menu Pengajuan, Audit, atau Laporan di bagian atas untuk berpindah di antara 9 halaman.",
+      },
+    ],
+    catatan:
+      "Semua data di demo fiktif: 130 pengajuan, nama usaha, auditor, dan nomor dokumen dibuat oleh skrip, lalu diolah dengan kode Apps Script asli sehingga logikanya sama dengan versi produksi. Demo langsung terbuka sebagai admin tanpa kode akses, dan peta butuh koneksi internet untuk memuat Leaflet.",
+  },
+  {
     slug: "dashboard-kinerja-lspro",
-    judul: "Dashboard Kinerja Sertifikasi & Peta Sebaran",
+    judul: "Dashboard Kinerja Sertifikasi Produk (LSPro)",
     kategori: "Business Intelligence · Geospasial · SLA",
     ringkas:
-      "Web app 6 halaman untuk LSPro BSPJI Pekanbaru: ringkasan eksekutif, klien, progres audit, kepatuhan SLA, komoditas, hingga peta sebaran permohonan per kabupaten/kota.",
-    periode: "September 2026",
+      "Web app 7 halaman untuk LSPro BSPJI Pekanbaru: ringkasan eksekutif, klien, progres audit, rotasi tugas auditor, kepatuhan SLA, komoditas, hingga peta sebaran permohonan per kabupaten/kota.",
+    periode: "September – Oktober 2026",
     peran: "Data Analyst Intern · BSPJI Pekanbaru",
     warna: "emerald",
     stack: ["Google Apps Script", "Leaflet", "OpenStreetMap", "Nominatim Geocoding", "Chart.js", "JavaScript", "clasp"],
-    sorotan: ["6 halaman analitik", "Peta Leaflet + geocoding", "Pengingat audit & survailen"],
+    sorotan: ["7 halaman analitik", "Peta Leaflet + geocoding", "Rotasi tugas auditor & PPC"],
     konteks:
-      "LSPro memantau seluruh alur sertifikasi produk, mulai dari permohonan di SIINas sampai sertifikat terbit, dalam satu sheet dengan lebih dari 60 kolom per permohonan. Pimpinan membutuhkan satu tempat untuk melihat kinerja, kepatuhan SLA, dan sebaran klien.",
+      "LSPro memantau seluruh alur sertifikasi produk, mulai dari permohonan di SIINas sampai sertifikat terbit, dalam satu sheet dengan lebih dari 60 kolom per permohonan. Pimpinan membutuhkan satu tempat untuk melihat kinerja, kepatuhan SLA, sebaran klien, dan pembagian tugas tim audit.",
     masalah: [
       "Lebih dari 60 kolom per permohonan sulit dibaca langsung dari spreadsheet.",
       "Kepatuhan SLA dan titik macet (bottleneck) proses tidak terlihat.",
       "Belum ada gambaran geografis sebaran klien untuk merencanakan perjalanan dinas.",
+      "Pembagian tugas Lead Auditor, Auditor, dan PPC dicek manual dari baris demi baris.",
     ],
     pendekatan: [
       {
@@ -152,25 +216,34 @@ export const proyek: Proyek[] = [
         isi: "Apps Script membaca sheet LK, hanya mengirim kolom yang dipakai frontend, lalu menyimpan hasilnya di cache yang dipecah per 30 ribu karakter agar lolos batas 100 KB Apps Script.",
       },
       {
-        judul: "6 halaman analitik",
-        isi: "Ringkasan Eksekutif, Klien & Permohonan, Jadwal & Progres Audit (tahapan, pengingat audit, jadwal survailen), SLA & Kepatuhan, Komoditas & Geografis, dan Peta Sebaran.",
+        judul: "7 halaman analitik",
+        isi: "Ringkasan Eksekutif, Klien & Permohonan, Jadwal & Progres Audit (tahapan, pengingat audit, jadwal survailen), Rotasi Tugas, SLA & Kepatuhan, Komoditas & Geografis, dan Peta Sebaran.",
       },
       {
         judul: "Peta sebaran tanpa API key",
-        isi: "Leaflet + OpenStreetMap dengan bubble per kabupaten/kota, mode jumlah permohonan atau perusahaan unik, filter dan warna per jenis dinas, serta mode gelap/terang.",
+        isi: "Leaflet + OpenStreetMap dengan bubble per kabupaten/kota dan warna per jenis dinas. Alamat pabrik dicari koordinatnya lewat Nominatim dengan cache permanen dan jeda 1 permintaan/detik; bila gagal, memakai titik kabupaten/kota.",
       },
       {
-        judul: "Geocoding alamat pabrik",
-        isi: "Alamat pabrik dicari koordinatnya lewat Nominatim dengan cache permanen dan jeda 1 permintaan/detik sesuai kebijakan layanan; bila gagal, otomatis memakai titik kabupaten/kota.",
+        judul: "Rotasi tugas yang merata",
+        isi: "Giliran dihitung per peran (Lead Auditor, Auditor, PPC) dari baris yang ditandai ikut perhitungan. Semua personil boleh menangani semua komoditi agar semua belajar; satu-satunya pengecualian adalah jadwal yang bentrok.",
       },
       {
         judul: "Analisis yang bisa diklik",
         isi: "Setiap grafik bisa diklik untuk membuka daftar kasus di baliknya, lengkap dengan modal detail klien dan penanda kasus kritis yang mendekati batas tutup temuan.",
       },
+      {
+        judul: "Audit kualitas data",
+        isi: "Memeriksa rumus dan isi sheet, misalnya durasi tahap yang bernilai negatif, baris tanpa rumus, dan daftar hari libur yang belum diperbarui, lalu melaporkannya ke tim untuk diperbaiki bertahap.",
+      },
+      {
+        judul: "Kode akses",
+        isi: "Kode disimpan di Properti Skrip, bukan di kode. Kode yang benar menghasilkan tiket HMAC yang berlaku satu hari; tiga kali salah mengunci layar selama 30 detik.",
+      },
     ],
     metrik: [
-      { nilai: "6", label: "Halaman analitik dalam satu web app" },
+      { nilai: "7", label: "Halaman analitik dalam satu web app" },
       { nilai: "66", label: "Kolom data per permohonan diolah" },
+      { nilai: "3", label: "Peran tim audit dirotasi (Lead, Auditor, PPC)" },
       { nilai: "4", label: "Jenis dinas dipetakan dengan warna berbeda" },
       { nilai: "Rp0", label: "Biaya API peta (OpenStreetMap)" },
     ],
@@ -183,65 +256,7 @@ export const proyek: Proyek[] = [
       },
     ],
     catatan:
-      "Semua data di demo fiktif. Demo dibuat dengan menjalankan kode Apps Script asli terhadap clone sheet berisi data dummy. Geocoding alamat dimatikan karena alamat dummy fiktif, sehingga peta memakai titik kabupaten/kota; dua permohonan luar negeri sengaja muncul sebagai \"tanpa koordinat\".",
-  },
-  {
-    slug: "dashboard-monitoring",
-    judul: "Dashboard Monitoring Penugasan Auditor",
-    kategori: "Data Analytics · Dashboard · Otomasi",
-    ringkas:
-      "Dua dashboard untuk unit LSPro dan LPH di BSPJI Pekanbaru: data monitoring di Google Sheets langsung menjadi jadwal, beban kerja, dan rekomendasi giliran auditor.",
-    periode: "Agustus 2026 – sekarang",
-    peran: "Data Analyst Intern · BSPJI Pekanbaru",
-    warna: "cyan",
-    stack: ["Google Apps Script", "Google Sheets", "JavaScript", "Chart.js", "clasp", "Python", "Data Cleaning"],
-    sorotan: ["2 dashboard produksi", "12 ruang lingkup halal dicek otomatis", "Demo interaktif"],
-    konteks:
-      "Penugasan auditor sebelumnya diputuskan dengan membaca spreadsheet monitoring baris demi baris. Pemerataan tugas, kewenangan ruang lingkup, dan masa berlaku sertifikat harus dicek manual.",
-    masalah: [
-      "Sulit melihat siapa yang sudah berapa kali dinas dalam kota, luar kota darat, udara, atau luar negeri.",
-      "Kewenangan auditor per ruang lingkup dan masa berlaku sertifikat dicek terpisah.",
-      "Data monitoring tidak seragam: teks bebas, sel kosong, tanggal bercampur teks.",
-    ],
-    pendekatan: [
-      {
-        judul: "Audit kualitas data",
-        isi: "Memetakan masalah data sheet monitoring (format tidak seragam, rumus salah rentang, validasi yang tidak berfungsi) lalu memperbaikinya bertahap bersama tim.",
-      },
-      {
-        judul: "Validasi berbasis kompetensi",
-        isi: "Matriks auditor × 12 ruang lingkup halal beserta masa berlaku sertifikat, dengan dropdown dan pemformatan bersyarat yang menandai penugasan di luar kewenangan.",
-      },
-      {
-        judul: "Apps Script tanpa server",
-        isi: "Kode membaca kolom lewat nama header, memecah tim audit menjadi satu baris per auditor, di-cache 60 detik, dan otomatis dibersihkan setiap sheet diedit.",
-      },
-      {
-        judul: "Rekomendasi giliran",
-        isi: "Auditor diurutkan dari tugas paling sedikit di jenis dinas yang sama, lalu tugas terakhir paling lama. Yang tidak berwenang, sertifikatnya habis, atau jadwalnya bentrok otomatis dilewati.",
-      },
-    ],
-    metrik: [
-      { nilai: "2", label: "Dashboard produksi (LSPro & LPH)" },
-      { nilai: "4", label: "Jenis dinas dipantau per auditor" },
-      { nilai: "12", label: "Ruang lingkup halal dicek kewenangannya" },
-      { nilai: "30 dtk", label: "Dashboard memuat ulang data otomatis" },
-    ],
-    gambar: [],
-    demo: [
-      {
-        judul: "Demo LPH: Jadwal Auditor Halal",
-        href: "/demo/lph/dashboard",
-        deskripsi: "Rekomendasi giliran, matriks ruang lingkup, sertifikat habis, dan aturan unit kerja.",
-      },
-      {
-        judul: "Demo LSPro: Jadwal per Jenis Dinas",
-        href: "/demo/lspro/dashboard",
-        deskripsi: "5 peran tim audit, matriks personil × komoditi, dan 3 grafik analisis.",
-      },
-    ],
-    catatan:
-      "Semua data di demo fiktif. Demo dibuat dengan menjalankan kode Apps Script asli terhadap clone sheet berisi data dummy, sehingga logikanya sama dengan versi produksi tanpa membuka data instansi.",
+      "Semua data di demo fiktif. Demo dibuat dengan menjalankan kode Apps Script asli terhadap clone sheet berisi data dummy dan memuat 6 halaman analitik; tab Rotasi Tugas dan kode akses tidak ikut di demo. Geocoding alamat dimatikan karena alamat dummy fiktif, sehingga peta memakai titik kabupaten/kota; dua permohonan luar negeri sengaja muncul sebagai \"tanpa koordinat\".",
   },
   {
     slug: "sistem-klinik",

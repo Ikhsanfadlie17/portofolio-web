@@ -28,7 +28,7 @@ export default function KartuProyek({ p, besar = false, delay = 0 }: { p: Proyek
               ) : p.slug === "dashboard-kinerja-lspro" ? (
                 <IlustrasiPeta />
               ) : (
-                <IlustrasiDashboard warna={p.warna} varian={p.slug === "sistem-klinik" ? "klinik" : "jadwal"} />
+                <IlustrasiDashboard warna={p.warna} varian={p.slug === "sistem-klinik" ? "klinik" : "halal"} />
               )}
             </div>
           </div>
