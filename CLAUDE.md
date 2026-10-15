@@ -53,7 +53,10 @@ Selesai 15 Okt (sesi ketiga, dicek di situs live):
   "Data Analyst"; klinik "Sistem Manajemen Klinik Berbasis Web" (fokus backend, sesuai CV); Power BI dihapus (tidak ada
   di CV); periode LPH "September 2026 – sekarang"; ejaan "kebinekaan". ISO 9001 tampil di bagian Sertifikasi.
 
+- Demo LSPro (`public/demo/lspro-kinerja/`) dibangun ulang dari repo `dashboard-lspro` terbaru: 7 halaman termasuk
+  Rotasi Tugas, terbuka tanpa kode akses. Bangun ulang: `node tools/demo-lspro/bangun.js <clone dashboard-lspro>`
+  (data fiktif di `tools/demo-lspro/data-dummy.json`; kode server tidak disalin, hanya hasil olahan `data.js`).
+
 Belum dikerjakan (tanya user dulu):
-1. Demo LSPro belum memuat tab Rotasi Tugas; butuh data dummy + `DinasData.js` dari repo `dashboard-lspro`.
-2. "SQL" di stack Sistem Klinik dibiarkan (backend memakai basis data); konfirmasi ke user bila ragu.
-3. URL lama `/proyek/dashboard-monitoring/` dan `/demo/lph/dashboard/` sekarang 404; buat redirect bila pernah dibagikan.
+1. "SQL" di stack Sistem Klinik dibiarkan (backend memakai basis data); konfirmasi ke user bila ragu.
+2. URL lama `/proyek/dashboard-monitoring/` dan `/demo/lph/dashboard/` sekarang 404; buat redirect bila pernah dibagikan.

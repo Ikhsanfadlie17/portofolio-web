@@ -252,11 +252,11 @@ export const proyek: Proyek[] = [
       {
         judul: "Demo: Dashboard Kinerja LSPro",
         href: "/demo/lspro-kinerja/dashboard",
-        deskripsi: "Pilih menu di sidebar untuk berpindah halaman. Buka layar penuh untuk melihat peta sebaran.",
+        deskripsi: "Pilih menu di sidebar untuk berpindah halaman, termasuk Rotasi Tugas untuk melihat giliran Lead Auditor, Auditor, dan PPC. Buka layar penuh untuk melihat peta sebaran.",
       },
     ],
     catatan:
-      "Semua data di demo fiktif. Demo dibuat dengan menjalankan kode Apps Script asli terhadap clone sheet berisi data dummy dan memuat 6 halaman analitik; tab Rotasi Tugas dan kode akses tidak ikut di demo. Geocoding alamat dimatikan karena alamat dummy fiktif, sehingga peta memakai titik kabupaten/kota; dua permohonan luar negeri sengaja muncul sebagai \"tanpa koordinat\".",
+      "Semua data di demo fiktif: 90 permohonan, nama perusahaan, dan personil dibuat oleh skrip, lalu diolah dengan kode Apps Script asli sehingga ketujuh halaman, termasuk Rotasi Tugas, bekerja sama dengan versi produksi. Demo langsung terbuka tanpa kode akses. Geocoding alamat dimatikan karena alamat dummy fiktif, sehingga peta memakai titik kabupaten/kota; dua permohonan luar negeri sengaja muncul sebagai \"tanpa koordinat\".",
   },
   {
     slug: "sistem-klinik",
